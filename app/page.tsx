@@ -35,9 +35,8 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-cream">
       {/* Header */}
       <header className="px-6 py-5 flex items-center justify-between border-b border-warm-border max-w-6xl mx-auto w-full">
-        <div className="flex items-center gap-1">
-          <span className="font-serif text-xl font-bold tracking-tight text-warm-black">Ask</span>
-          <span className="font-serif text-xl font-bold tracking-tight text-warm-black">Womens</span>
+        <div className="flex items-center gap-0.5">
+          <span className="font-serif text-xl font-bold tracking-tight text-warm-black">AskWomens</span>
           <span className="font-serif text-xl font-bold tracking-tight" style={{ color: '#9B4163' }}>AI</span>
         </div>
         <nav className="hidden sm:flex items-center gap-7 text-sm text-warm-gray">
@@ -50,6 +49,7 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col items-center px-4">
         {/* Hero */}
         <section className="w-full max-w-2xl mx-auto pt-20 pb-12 text-center">
+
           {/* Badge */}
           <div
             className="inline-flex items-center gap-2 text-xs font-medium px-4 py-1.5 rounded-full mb-7 border"
@@ -66,7 +66,7 @@ export default function HomePage() {
           >
             Your health questions,
             <br />
-            <span>answered by{' '}</span>
+            answered by{' '}
             <em
               className="not-italic"
               style={{
@@ -76,14 +76,26 @@ export default function HomePage() {
                 textDecorationThickness: '2px',
               }}
             >
-              every
+              every AI
             </em>
-            <span> AI — at once.</span>
+            ,<br />
+            from one search.
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg text-warm-gray max-w-lg mx-auto mb-8 leading-relaxed">
+          <p className="text-lg text-warm-gray max-w-lg mx-auto mb-6 leading-relaxed">
             Stop trusting one AI with your health. AskWomensAI asks ChatGPT, Gemini, Claude, and Grok simultaneously — then compiles one clear answer, shows where they agree, and flags where they don&apos;t.
+          </p>
+
+          {/* Breathing tagline — above search box */}
+          <p
+            className="text-sm font-medium font-serif italic mb-8"
+            style={{
+              color: '#9B4163',
+              animation: 'breath 3s ease-in-out infinite',
+            }}
+          >
+            Because one AI&apos;s opinion isn&apos;t enough for decisions that matter.
           </p>
 
           {/* Search box */}
@@ -145,18 +157,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Breathing tagline */}
-          <p
-            className="mt-7 text-sm font-medium font-serif italic"
-            style={{
-              color: '#9B4163',
-              animation: 'breath 3s ease-in-out infinite',
-            }}
-          >
-            Because one AI&apos;s opinion isn&apos;t enough for decisions that matter.
-          </p>
-
-          <p className="mt-3 text-xs text-warm-muted">
+          <p className="mt-5 text-xs text-warm-muted">
             5 free questions per day · No account required · Always consult a healthcare provider
           </p>
         </section>
