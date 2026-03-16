@@ -1,118 +1,120 @@
-# EveryGPT — Session Handover
-
-## What Was Built / Decided This Session
-
-### Product
-- **EveryGPT** — an app that sends one question to ChatGPT, Gemini, Claude, and Grok in parallel, then synthesizes the results into: Best Answer, Consensus, Disagreements, and Raw Responses.
-- Full build plan is in the project file: `everygpt_v1_claude_build_plan.md`
-
-### Positioning (Locked)
-- **Target audience:** Women in America navigating health decisions
-- **Core value prop:** "The AI health advisor that shows you what multiple AIs actually think — not just one."
-- **Distribution ignition:** Reddit communities — r/WomensHealth, r/PCOS, r/Menopause, r/TryingForABaby, r/pregnant
-- **Tone:** Warm, practical, credible, no hype. "Use this to walk into your appointment better informed."
-- **Key trust requirement:** Strong but empowering disclaimer copy baked into the product voice, not buried fine print. Hard guardrails on crisis/self-harm content.
-
-### Monetization (Locked)
-- **Model:** Freemium
-- **Free tier:** 5 searches/day
-- **Paid tier:** $9.99/month — unlimited searches, saved history, follow-up questions
-- **Launch promo:** $0.99 first month, auto-renews at $9.99
-- **Do NOT monetize the synthesis layer** — all revenue comes from around the product, never from influencing results
-
-### Tech Stack (From Build Plan)
-- **Frontend:** Next.js 14+ App Router, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend:** Next.js route handlers
-- **DB/Auth:** Supabase
-- **Hosting:** Vercel
-- **Rate limiting:** Upstash Redis
-- **AI APIs:** OpenAI, Anthropic, Google Gemini, xAI (Grok)
-- **Analytics:** PostHog or Plausible
-- **Errors:** Sentry
+# AskWomensAI — Handover Document
+Last updated: March 16, 2026
 
 ---
 
-## Environment
+## Product Summary
+**AskWomensAI** — a web app that fans out health questions to ChatGPT, Gemini, Claude, and Grok in parallel, then synthesizes a Best Answer, Consensus, and Disagreements.
 
-- **Machine:** Windows (PowerShell)
-- **Node:** v24.13.1
-- **npm:** v11.8.0
-- **Project folder:** Create fresh at `C:\Users\rbend\Desktop\EveryGPT`
-- **Domain:** everygpt.com (hosted on GoDaddy — will point to Vercel)
-- **User's other stack:** Supabase + Vercel already in use on other projects
+**Target audience:** Women navigating health decisions
+**Positioning:** Multiple AI perspectives on health questions, not just one
 
 ---
 
-## Where to Start Next Session
-
-### Step 1 — Scaffold the app
-**IMPORTANT:** npm does not allow capital letters in project names. Create the folder manually in Windows Explorer as `EveryGPT`, then run this from inside it:
-
-```powershell
-Set-Location "C:\Users\rbend\Desktop\EveryGPT"
-npx create-next-app@latest . --typescript --tailwind --app --no-eslint --no-src-dir --import-alias "@/*" --yes
-```
-
-If that still fails due to the folder name, run from Desktop and use lowercase, then rename:
-```powershell
-Set-Location "C:\Users\rbend\Desktop"
-npx create-next-app@latest everygpt --typescript --tailwind --app --no-eslint --no-src-dir --import-alias "@/*" --yes
-```
-Then rename the folder to EveryGPT in Explorer — it won't break anything on Windows.
-
-### Step 2 — Install additional dependencies
-```powershell
-npm install @anthropic-ai/sdk openai @google/generative-ai @supabase/supabase-js @upstash/ratelimit @upstash/redis zod react-hook-form framer-motion lucide-react
-npx shadcn@latest init
-```
-
-### Step 3 — Create `.env.local`
-```bash
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-GEMINI_API_KEY=
-XAI_API_KEY=
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-OPENAI_MODEL=gpt-4o-mini
-ANTHROPIC_MODEL=claude-haiku-4-5-20251001
-GEMINI_MODEL=gemini-2.0-flash
-XAI_MODEL=grok-3-mini
-SYNTHESIS_PROVIDER=anthropic
-SYNTHESIS_MODEL=claude-sonnet-4-6
-FREE_DAILY_LIMIT=5
-ENABLE_OPENAI=true
-ENABLE_GEMINI=true
-ENABLE_ANTHROPIC=true
-ENABLE_XAI=true
-```
-
-### Step 4 — Build in this order
-1. Provider abstraction layer (`/lib/ai/`)
-2. `/api/search` route handler
-3. Synthesis engine
-4. Homepage with search box
-5. Results page
-6. Rate limiting
-7. Supabase logging tables
+## Live URLs
+- Production: https://askwomensai.com (DNS propagating as of today)
+- Vercel fallback: https://womensai.vercel.app
+- GitHub repo: https://github.com/rbender-boop/womensai
 
 ---
 
-## Key Decisions Already Made — Do Not Revisit
-- Niche: women's health (not B2B software, not teenagers, not broad)
-- Freemium at $9.99/month
-- Free tier = 5 searches/day
-- Launch promo = $0.99 first month
-- Synthesis layer must stay 100% unbiased — no pay-to-influence ever
-- Launch free first, introduce paid at month 3–6
+## Local Dev
+- Folder: C:\Users\rbend\Desktop\everygpt
+- Run: npm run dev
+- Local URL: http://localhost:3000
 
 ---
 
-## Prompt to Start the Next Session
-Paste this to the new Claude:
+## Tech Stack
+- Next.js 16 + TypeScript + Tailwind CSS
+- Vercel (hosting)
+- Supabase (DB — not yet configured)
+- Upstash Redis (rate limiting — not yet configured)
+- All 4 AI providers wired via official APIs
 
-"Read this handover file and the build plan file `everygpt_v1_claude_build_plan.md` in the project. We are ready to start building. The folder is at C:\Users\rbend\Desktop\EveryGPT. Scaffold the Next.js app, install dependencies, and start with the provider abstraction layer and the /api/search route."
+---
+
+## API Keys Status
+All 4 keys are in .env.local AND in Vercel environment variables:
+- ANTHROPIC_API_KEY ✅
+- OPENAI_API_KEY ✅
+- GEMINI_API_KEY ✅
+- XAI_API_KEY ✅
+
+⚠️ NOTE: All 4 keys were shared in chat and should be regenerated ASAP.
+
+---
+
+## Models Configured
+- OpenAI: gpt-4o-mini
+- Anthropic: claude-haiku-4-5-20251001
+- Gemini: gemini-2.0-flash
+- xAI: grok-3-mini
+- Synthesis: claude-sonnet-4-6 (via Anthropic)
+
+---
+
+## Domain Portfolio
+- askwomensai.com ✅ Owned outright, expires Mar 16, 2028 — IN USE
+- womensgpt.com ✅ Owned outright, expires Mar 16, 2028 — parked
+- getwomensai.com ✅ Owned outright, expires Mar 16, 2031 — parked
+- womensai.com ❌ Leased only — $10k buyout, not worth it at this stage
+
+---
+
+## Branding
+- Product name: AskWomensAI
+- Logo: "Womens" (serif, warm black) + "AI" (serif, rosewood #9B4163)
+- Font: Playfair Display (headings) + DM Sans (body)
+- Palette: Cream background #FBF8F5, rosewood accent #9B4163, warm borders
+
+---
+
+## What's Working
+- Homepage with hero, search box, example prompts
+- /api/search — fan-out to all 4 providers + synthesis
+- Results page — Best Answer, Consensus, Disagreements, Raw tabs
+- Rate limiting (IP-based, 5/day) — needs Upstash Redis to be fully active
+- About, Pricing, Privacy, Terms pages
+- Mobile responsive
+
+---
+
+## What's NOT Yet Configured
+- Supabase — tables created (migration SQL ready) but no credentials in .env
+- Upstash Redis — rate limiting falls back to in-memory without it
+- Email (Resend) — not set up
+- Stripe — not set up
+- Analytics (PostHog) — not set up
+
+---
+
+## Pricing Plan
+- Free: 5 searches/day, no account required
+- Pro: $9.99/month (coming soon) — unlimited, saved history, follow-ups
+
+---
+
+## Next Steps (Priority Order)
+1. ⚠️ Regenerate all 4 API keys (they were shared in chat)
+2. Set up Supabase — run migrations/001_init.sql, add credentials to Vercel env vars
+3. Set up Upstash Redis — add credentials for real rate limiting
+4. Test a live search end-to-end on askwomensai.com
+5. Set up PostHog analytics
+6. Seed Reddit communities (r/WomensHealth, r/PCOS, r/Menopause)
+7. Mobile app (React Native) — v2, after web traction
+
+---
+
+## Key Decisions Made — Do Not Revisit
+- Niche: women's health
+- Domain: askwomensai.com
+- Free tier: 5/day, no account required
+- Synthesis layer always runs on Claude (Anthropic)
+- No ads, no vendor bias — ever
+- Mobile app is v2, not v1
+
+---
+
+## Prompt to Resume Next Session
+"Read the handover file at C:\Users\rbend\Desktop\everygpt\handovers\EveryGPT_Handover.md before we start. The app is live at askwomensai.com. Pick up from the Next Steps list."

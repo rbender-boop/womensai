@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* Warm palette */
   --color-cream: #FBF8F5;
   --color-cream-dark: #F0E9E1;
   --color-petal: #F7ECF0;
@@ -14,36 +13,27 @@
   --color-warm-muted: #AFA8A2;
   --color-warm-border: #EDE8E3;
   --color-warm-border-dark: #DDD5CE;
-
-  /* Fonts */
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
   --font-serif: var(--font-playfair), Georgia, serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #DDD5CE;
-  border-radius: 3px;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #DDD5CE; border-radius: 3px; }
 
-/* Pulse animation for warm skeleton */
 @keyframes warm-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 .warm-pulse {
   animation: warm-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes breath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }

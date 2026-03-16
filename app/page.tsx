@@ -36,13 +36,9 @@ export default function HomePage() {
       {/* Header */}
       <header className="px-6 py-5 flex items-center justify-between border-b border-warm-border max-w-6xl mx-auto w-full">
         <div className="flex items-center gap-1">
+          <span className="font-serif text-xl font-bold tracking-tight text-warm-black">Ask</span>
           <span className="font-serif text-xl font-bold tracking-tight text-warm-black">Womens</span>
-          <span
-            className="font-serif text-xl font-bold tracking-tight"
-            style={{ color: '#9B4163' }}
-          >
-            AI
-          </span>
+          <span className="font-serif text-xl font-bold tracking-tight" style={{ color: '#9B4163' }}>AI</span>
         </div>
         <nav className="hidden sm:flex items-center gap-7 text-sm text-warm-gray">
           <a href="#how-it-works" className="hover:text-warm-black transition-colors">How it works</a>
@@ -57,11 +53,7 @@ export default function HomePage() {
           {/* Badge */}
           <div
             className="inline-flex items-center gap-2 text-xs font-medium px-4 py-1.5 rounded-full mb-7 border"
-            style={{
-              background: '#F7ECF0',
-              borderColor: '#E8C4D0',
-              color: '#9B4163',
-            }}
+            style={{ background: '#F7ECF0', borderColor: '#E8C4D0', color: '#9B4163' }}
           >
             <Sparkles size={11} />
             ChatGPT · Gemini · Claude · Grok — one compiled answer
@@ -74,13 +66,24 @@ export default function HomePage() {
           >
             Your health questions,
             <br />
-            <em className="not-italic" style={{ color: '#9B4163' }}>
-              answered by every AI.
+            <span>answered by{' '}</span>
+            <em
+              className="not-italic"
+              style={{
+                color: '#9B4163',
+                textDecoration: 'underline',
+                textUnderlineOffset: '6px',
+                textDecorationThickness: '2px',
+              }}
+            >
+              every
             </em>
+            <span> AI — at once.</span>
           </h1>
 
-          <p className="text-lg text-warm-gray max-w-lg mx-auto mb-10 leading-relaxed">
-            AskWomensAI asks ChatGPT, Gemini, Claude, and Grok at the same time — then compiles the clearest answer, shows what they agree on, and flags where they differ.
+          {/* Subheadline */}
+          <p className="text-lg text-warm-gray max-w-lg mx-auto mb-8 leading-relaxed">
+            Stop trusting one AI with your health. AskWomensAI asks ChatGPT, Gemini, Claude, and Grok simultaneously — then compiles one clear answer, shows where they agree, and flags where they don&apos;t.
           </p>
 
           {/* Search box */}
@@ -90,7 +93,6 @@ export default function HomePage() {
               border: '1.5px solid #EDE8E3',
               boxShadow: '0 2px 12px rgba(155, 65, 99, 0.06)',
             }}
-            onFocus={() => {}}
           >
             <textarea
               className="w-full px-5 pt-4 pb-2 text-base placeholder-warm-muted bg-transparent resize-none focus:outline-none rounded-t-2xl leading-relaxed text-warm-black"
@@ -128,11 +130,7 @@ export default function HomePage() {
                 key={ex}
                 onClick={() => { setQuery(ex); setError(''); }}
                 className="text-xs px-3 py-1.5 rounded-full transition-colors text-left"
-                style={{
-                  background: '#fff',
-                  border: '1px solid #EDE8E3',
-                  color: '#7A6E67',
-                }}
+                style={{ background: '#fff', border: '1px solid #EDE8E3', color: '#7A6E67' }}
                 onMouseEnter={(e) => {
                   (e.target as HTMLElement).style.borderColor = '#E8C4D0';
                   (e.target as HTMLElement).style.color = '#9B4163';
@@ -147,8 +145,19 @@ export default function HomePage() {
             ))}
           </div>
 
-          <p className="mt-6 text-xs text-warm-muted">
-            5 free questions per day · No account required · Always consult a healthcare provider for personal medical decisions
+          {/* Breathing tagline */}
+          <p
+            className="mt-7 text-sm font-medium font-serif italic"
+            style={{
+              color: '#9B4163',
+              animation: 'breath 3s ease-in-out infinite',
+            }}
+          >
+            Because one AI&apos;s opinion isn&apos;t enough for decisions that matter.
+          </p>
+
+          <p className="mt-3 text-xs text-warm-muted">
+            5 free questions per day · No account required · Always consult a healthcare provider
           </p>
         </section>
 
@@ -209,8 +218,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-warm-border py-8 px-6 bg-white">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-warm-gray">
-          <div className="flex items-center gap-1">
-            <span className="font-serif font-bold text-warm-black">Womens</span>
+          <div className="flex items-center gap-0.5">
+            <span className="font-serif font-bold text-warm-black">AskWomens</span>
             <span className="font-serif font-bold" style={{ color: '#9B4163' }}>AI</span>
             <span className="ml-2 text-warm-muted text-xs">© 2025</span>
           </div>
