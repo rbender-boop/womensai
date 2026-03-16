@@ -8,6 +8,14 @@ import { runOpenAI } from '@/lib/ai/providers/openai';
 import { runAnthropic } from '@/lib/ai/providers/anthropic';
 import { runGemini } from '@/lib/ai/providers/gemini';
 import { runGrok } from '@/lib/ai/providers/grok';
+import {
+  normalizeQuery,
+  hashQuery,
+  generateEmbedding,
+  checkExactCache,
+  checkSemanticCache,
+  saveToCache,
+} from '@/lib/cache';
 import type { ProviderResult, SearchResponse } from '@/types/search';
 
 function getIpHash(req: NextRequest): string {
@@ -50,6 +58,42 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ── Cache lookup ────────────────────────────────────────────────────────────
+  const normalized = normalizeQuery(query);
+  const queryHash = hashQuery(normalized);
+
+  // 1. Exact match
+  const exactHit = await checkExactCache(queryHash);
+  if (exactHit) {
+    return NextResponse.json({
+      requestId,
+      status: 'success',
+      query,
+      compiled: exactHit.compiled,
+      providers: exactHit.providers,
+      totalLatencyMs: Date.now() - start,
+      cached: true,
+    } satisfies SearchResponse & { cached: boolean });
+  }
+
+  // 2. Semantic match
+  const embedding = await generateEmbedding(normalized);
+  if (embedding) {
+    const semanticHit = await checkSemanticCache(embedding);
+    if (semanticHit) {
+      return NextResponse.json({
+        requestId,
+        status: 'success',
+        query,
+        compiled: semanticHit.compiled,
+        providers: semanticHit.providers,
+        totalLatencyMs: Date.now() - start,
+        cached: true,
+      } satisfies SearchResponse & { cached: boolean });
+    }
+  }
+  // ── End cache lookup ────────────────────────────────────────────────────────
+
   const settled = await Promise.allSettled([
     runOpenAI(query),
     runGemini(query),
@@ -86,7 +130,9 @@ export async function POST(req: NextRequest) {
   const compiled = await synthesizeResponses(query, providers);
   const totalLatencyMs = Date.now() - start;
 
+  // Persist to DB and save to cache (both fire-and-forget)
   persistSearch(requestId, query, providers, compiled, totalLatencyMs, ipHash).catch(console.error);
+  saveToCache(normalized, queryHash, embedding, compiled, providers).catch(console.error);
 
   const response: SearchResponse = {
     requestId,
