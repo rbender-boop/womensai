@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EveryGPT
 
-## Getting Started
+Ask once. Get every AI's answer. Built for women navigating health decisions.
 
-First, run the development server:
+## Stack
 
+- **Next.js 16** (App Router, TypeScript)
+- **Tailwind CSS v4**
+- **Supabase** (Postgres + optional auth)
+- **Upstash Redis** (rate limiting)
+- **OpenAI, Anthropic, Google Gemini, xAI** (provider APIs)
+
+## Setup
+
+### 1. Install dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure environment
+Copy `.env.local` and fill in your API keys:
+```bash
+cp .env.local .env.local
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Required keys:
+| Key | Source |
+|-----|--------|
+| `OPENAI_API_KEY` | platform.openai.com |
+| `ANTHROPIC_API_KEY` | console.anthropic.com |
+| `GEMINI_API_KEY` | aistudio.google.com |
+| `XAI_API_KEY` | console.x.ai |
+| `SUPABASE_URL` | supabase.com project settings |
+| `SUPABASE_SERVICE_ROLE_KEY` | supabase.com project settings |
+| `UPSTASH_REDIS_REST_URL` | console.upstash.com |
+| `UPSTASH_REDIS_REST_TOKEN` | console.upstash.com |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> Supabase and Upstash are optional in development — the app will skip persistence and rate limiting if not configured.
 
-## Learn More
+### 3. Set up Supabase (optional but recommended)
+Run the migration in `supabase/migrations/001_init.sql` against your Supabase project via the SQL editor.
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Run locally
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How it works
 
-## Deploy on Vercel
+1. User submits a question on the homepage
+2. `/api/search` fans out to all 4 providers in parallel
+3. Responses are synthesized into Best Answer / Consensus / Disagreements
+4. Results are displayed and optionally persisted to Supabase
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Rate limiting
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Default: 5 searches/day per IP. Configurable via `FREE_DAILY_LIMIT` env var. Requires Upstash Redis. In dev without Redis, rate limiting is bypassed.
+
+## Provider models (configurable via env)
+
+| Provider | Default model |
+|----------|--------------|
+| OpenAI | gpt-4o-mini |
+| Anthropic | claude-haiku-4-5-20251001 |
+| Gemini | gemini-2.0-flash |
+| xAI | grok-3-mini |
+| Synthesis | claude-sonnet-4-6 (Anthropic) |
+
+## Deploy
+
+Push to GitHub and connect to Vercel. Add all env vars in Vercel project settings. Point `NEXT_PUBLIC_APP_URL` to your production domain.
