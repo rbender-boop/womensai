@@ -9,6 +9,8 @@ const EXAMPLES = [
   'Is it safe to take melatonin every night long-term?',
   'What are signs of perimenopause vs regular PMS?',
   'How do I talk to my doctor about getting my hormones tested?',
+  'What are the early warning signs of breast cancer I should watch for?',
+  'What body changes are normal for girls going through puberty?',
 ];
 
 export default function HomePage() {
