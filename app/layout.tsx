@@ -16,11 +16,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'WomensAI — Your health questions, answered by every AI.',
+  title: 'AskWomensAI — Your health questions, answered by every AI.',
   description:
-    'WomensAI asks ChatGPT, Gemini, Claude, and Grok at the same time — then compiles the clearest answer, highlights where they agree, and flags where they differ.',
+    'AskWomensAI asks ChatGPT, Gemini, Claude, and Grok at the same time — then compiles the clearest answer, highlights where they agree, and flags where they differ.',
   openGraph: {
-    title: 'WomensAI',
+    title: 'AskWomensAI',
     description: 'Your health questions, answered by every AI.',
     url: process.env.NEXT_PUBLIC_APP_URL,
   },

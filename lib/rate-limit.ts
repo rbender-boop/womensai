@@ -16,7 +16,7 @@ function getRatelimit(): Ratelimit | null {
     ratelimit = new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(limit, '24 h'),
-      prefix: 'everygpt:rl',
+      prefix: 'AskWomensAI:rl',
     });
   }
   return ratelimit;

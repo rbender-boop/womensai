@@ -80,7 +80,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-lg text-warm-gray max-w-lg mx-auto mb-10 leading-relaxed">
-            WomensAI asks ChatGPT, Gemini, Claude, and Grok at the same time — then compiles the clearest answer, shows what they agree on, and flags where they differ.
+            AskWomensAI asks ChatGPT, Gemini, Claude, and Grok at the same time — then compiles the clearest answer, shows what they agree on, and flags where they differ.
           </p>
 
           {/* Search box */}
@@ -155,7 +155,7 @@ export default function HomePage() {
         {/* How it works */}
         <section id="how-it-works" className="w-full max-w-4xl mx-auto py-16 border-t border-warm-border">
           <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">
-            How WomensAI works
+            How AskWomensAI works
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[

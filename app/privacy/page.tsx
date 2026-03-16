@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       <div className="space-y-6 text-zinc-600 leading-relaxed text-sm">
         <section>
           <h2 className="font-semibold text-zinc-900 mb-2">What we collect</h2>
-          <p>We log the questions submitted to EveryGPT, your IP address (hashed), and basic usage metadata (response times, provider availability). We do not collect names, emails, or any personally identifiable information in v1.</p>
+          <p>We log the questions submitted to AskWomensAI, your IP address (hashed), and basic usage metadata (response times, provider availability). We do not collect names, emails, or any personally identifiable information in v1.</p>
         </section>
         <section>
           <h2 className="font-semibold text-zinc-900 mb-2">How we use it</h2>
@@ -19,11 +19,11 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2 className="font-semibold text-zinc-900 mb-2">Health information</h2>
-          <p>EveryGPT is not a HIPAA-covered entity. Please do not submit personally identifying health information (your name, date of birth, specific diagnoses, etc.).</p>
+          <p>AskWomensAI is not a HIPAA-covered entity. Please do not submit personally identifying health information (your name, date of birth, specific diagnoses, etc.).</p>
         </section>
         <section>
           <h2 className="font-semibold text-zinc-900 mb-2">Contact</h2>
-          <p>For privacy questions, contact us at privacy@everygpt.com.</p>
+          <p>For privacy questions, contact us at privacy@AskWomensAI.com.</p>
         </section>
       </div>
     </div>
