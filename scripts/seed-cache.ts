@@ -10,7 +10,15 @@
  * Requires .env.local with all API keys set.
  */
 
-import 'dotenv/config';
+// Load .env.local manually
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+const envPath = resolve(process.cwd(), '.env.local');
+const envLines = readFileSync(envPath, 'utf-8').split('\n');
+for (const line of envLines) {
+  const [key, ...rest] = line.split('=');
+  if (key && rest.length) process.env[key.trim()] = rest.join('=').trim();
+}
 import { normalizeQuery, hashQuery, generateEmbedding, saveToCache, checkExactCache } from '../lib/cache';
 import { runOpenAI } from '../lib/ai/providers/openai';
 import { runAnthropic } from '../lib/ai/providers/anthropic';
