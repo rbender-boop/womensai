@@ -89,10 +89,11 @@ export default function HomePage() {
 
           {/* Breathing tagline — above search box */}
           <p
-            className="text-sm font-medium font-serif italic mb-8"
+            className="font-medium font-serif italic mb-8"
             style={{
-              color: '#9B4163',
-              animation: 'breath 3s ease-in-out infinite',
+              color: "#9B4163",
+              fontSize: "18px",
+              animation: "breath 3s ease-in-out infinite",
             }}
           >
             Because one AI&apos;s opinion isn&apos;t enough for decisions that matter.
@@ -237,3 +238,4 @@ export default function HomePage() {
     </div>
   );
 }
+
