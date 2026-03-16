@@ -1,8 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Sparkles, CheckCheck, GitFork, AlignLeft } from 'lucide-react';
+import { SignupPrompt } from '@/components/signup-prompt';
+import {
+  recordSession,
+  recordQuestion,
+  useSignupTrigger,
+} from '@/hooks/use-signup-trigger';
 
 const EXAMPLES = [
   'What are the best natural ways to manage PCOS symptoms?',
@@ -17,6 +23,14 @@ export default function HomePage() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
+  const [questionJustAsked, setQuestionJustAsked] = useState(false);
+
+  const { variant, dismiss, onSignedUp } = useSignupTrigger(questionJustAsked);
+
+  // Record session on first mount
+  useEffect(() => {
+    recordSession();
+  }, []);
 
   function handleSubmit(q: string) {
     const trimmed = q.trim();
@@ -29,12 +43,27 @@ export default function HomePage() {
       return;
     }
     setError('');
+
+    // Track question and trigger prompt evaluation
+    recordQuestion();
+    setQuestionJustAsked(true);
+    setTimeout(() => setQuestionJustAsked(false), 500);
+
     const encoded = encodeURIComponent(trimmed);
     router.push(`/results/new?q=${encoded}`);
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
+      {/* Signup prompt (banner or modal) */}
+      {variant && (
+        <SignupPrompt
+          variant={variant}
+          onDismiss={dismiss}
+          onSignedUp={onSignedUp}
+        />
+      )}
+
       {/* Header */}
       <header className="px-6 py-5 flex items-center justify-between border-b border-warm-border max-w-6xl mx-auto w-full">
         <div className="flex items-center gap-0.5">
@@ -89,13 +118,13 @@ export default function HomePage() {
             Stop trusting one AI with your health. AskWomensAI asks ChatGPT, Gemini, Claude, and Grok simultaneously — then compiles one clear answer, shows where they agree, and flags where they don&apos;t.
           </p>
 
-          {/* Breathing tagline — above search box */}
+          {/* Breathing tagline */}
           <p
             className="font-medium font-serif italic mb-8"
             style={{
-              color: "#9B4163",
-              fontSize: "18px",
-              animation: "breath 3s ease-in-out infinite",
+              color: '#9B4163',
+              fontSize: '18px',
+              animation: 'breath 3s ease-in-out infinite',
             }}
           >
             Because one AI&apos;s opinion isn&apos;t enough for decisions that matter.
@@ -190,7 +219,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* What you get section */}
+        {/* What you get */}
         <section className="w-full max-w-4xl mx-auto py-12 border-t border-warm-border mb-16">
           <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">
             What you get in every result
@@ -240,4 +269,3 @@ export default function HomePage() {
     </div>
   );
 }
-
