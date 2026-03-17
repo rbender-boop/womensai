@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Sparkles, CheckCheck, GitFork, AlignLeft } from 'lucide-react';
+import { Search, Sparkles, CheckCheck, GitFork, Brain } from 'lucide-react';
 import { SignupPrompt } from '@/components/signup-prompt';
 import {
   recordSession,
@@ -20,6 +20,81 @@ const EXAMPLES = [
   'What body changes are normal for girls going through puberty?',
 ];
 
+const DIFF_CARDS = [
+  {
+    icon: Sparkles,
+    label: 'We ask 4 AIs, not 1',
+    desc: 'Every other health tool gives you one AI\'s opinion. We give you four — simultaneously — so no single model\'s blind spot becomes yours.',
+    delay: '0s',
+  },
+  {
+    icon: GitFork,
+    label: 'We show you the disagreements',
+    desc: 'When AIs contradict each other on your health, that matters. We surface those conflicts clearly. Other tools bury them.',
+    delay: '0.75s',
+  },
+  {
+    icon: CheckCheck,
+    label: 'We synthesize, not just dump',
+    desc: 'You don\'t get four raw walls of text. You get one compiled recommendation — built from the strongest overlapping insights across all four models.',
+    delay: '1.5s',
+  },
+  {
+    icon: Brain,
+    label: 'Your answers get smarter over time',
+    desc: 'Sign up free and your history shapes every future answer. The more you ask, the more personalized your results become — not just your last question.',
+    delay: '2.25s',
+  },
+];
+
+function SpinningCard({
+  icon: Icon,
+  label,
+  desc,
+  delay,
+}: {
+  icon: React.ElementType;
+  label: string;
+  desc: string;
+  delay: string;
+}) {
+  return (
+    <div style={{ position: 'relative', padding: '2px', borderRadius: '18px' }}>
+      {/* Spinning ring */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: '18px',
+          padding: '2px',
+          background: 'conic-gradient(from 0deg, transparent 0%, #9B4163 20%, #E8C4D0 40%, transparent 60%)',
+          animation: `spinRing 3s linear infinite`,
+          animationDelay: delay,
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          maskComposite: 'exclude',
+        }}
+      />
+      {/* Card content */}
+      <div
+        className="flex items-start gap-4 bg-white rounded-2xl p-5 h-full"
+        style={{ position: 'relative', zIndex: 1 }}
+      >
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+          style={{ background: '#F7ECF0', border: '1px solid #E8C4D0' }}
+        >
+          <Icon size={15} style={{ color: '#9B4163' }} />
+        </div>
+        <div>
+          <p className="font-bold text-sm text-warm-black mb-1.5">{label}</p>
+          <p className="text-sm text-warm-gray leading-relaxed">{desc}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -28,7 +103,6 @@ export default function HomePage() {
   const [showInlineSignup, setShowInlineSignup] = useState(false);
   const [forceModal, setForceModal] = useState(false);
 
-  // Inline strip state
   const [stripEmail, setStripEmail] = useState('');
   const [stripLoading, setStripLoading] = useState(false);
   const [stripDone, setStripDone] = useState(false);
@@ -38,34 +112,23 @@ export default function HomePage() {
 
   useEffect(() => {
     recordSession();
-    // Don't show signup strip to already signed-up users
     setShowInlineSignup(!isSignedUp());
   }, []);
 
   function handleSubmit(q: string) {
     const trimmed = q.trim();
-    if (trimmed.length < 8) {
-      setError('Please enter at least 8 characters.');
-      return;
-    }
-    if (trimmed.length > 1500) {
-      setError('Please keep your question under 1,500 characters.');
-      return;
-    }
+    if (trimmed.length < 8) { setError('Please enter at least 8 characters.'); return; }
+    if (trimmed.length > 1500) { setError('Please keep your question under 1,500 characters.'); return; }
     setError('');
     recordQuestion();
     setQuestionJustAsked(true);
     setTimeout(() => setQuestionJustAsked(false), 500);
-    const encoded = encodeURIComponent(trimmed);
-    router.push(`/results/new?q=${encoded}`);
+    router.push(`/results/new?q=${encodeURIComponent(trimmed)}`);
   }
 
   async function handleStripSignup() {
     const trimmed = stripEmail.trim();
-    if (!trimmed.includes('@')) {
-      setStripError('Please enter a valid email.');
-      return;
-    }
+    if (!trimmed.includes('@')) { setStripError('Please enter a valid email.'); return; }
     setStripLoading(true);
     setStripError('');
     try {
@@ -92,7 +155,15 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
-      {/* Signup prompt (banner or modal) */}
+
+      {/* Spinning ring keyframes */}
+      <style>{`
+        @keyframes spinRing {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
+
       {activeVariant && (
         <SignupPrompt
           variant={activeVariant}
@@ -124,10 +195,9 @@ export default function HomePage() {
       </header>
 
       <main className="flex-1 flex flex-col items-center px-4">
+
         {/* Hero */}
         <section className="w-full max-w-2xl mx-auto pt-20 pb-12 text-center">
-
-          {/* Badge */}
           <div
             className="inline-flex items-center gap-2 text-xs font-medium px-4 py-1.5 rounded-full mb-7 border"
             style={{ background: '#F7ECF0', borderColor: '#E8C4D0', color: '#9B4163' }}
@@ -136,7 +206,6 @@ export default function HomePage() {
             ChatGPT · Gemini · Claude · Grok — one compiled answer
           </div>
 
-          {/* Headline */}
           <h1
             className="font-serif text-5xl sm:text-6xl font-bold tracking-tight leading-tight mb-5"
             style={{ color: '#1C1714' }}
@@ -144,58 +213,29 @@ export default function HomePage() {
             Your health questions,
             <br />
             answered by{' '}
-            <em
-              className="not-italic"
-              style={{
-                color: '#9B4163',
-                textDecoration: 'underline',
-                textUnderlineOffset: '6px',
-                textDecorationThickness: '2px',
-              }}
-            >
+            <em className="not-italic" style={{ color: '#9B4163', textDecoration: 'underline', textUnderlineOffset: '6px', textDecorationThickness: '2px' }}>
               every AI
             </em>
             ,<br />
             from one search.
           </h1>
 
-          {/* Subheadline */}
           <p className="text-lg text-warm-gray max-w-lg mx-auto mb-6 leading-relaxed">
             Stop trusting one AI with your health. AskWomensAI asks ChatGPT, Gemini, Claude, and Grok simultaneously — then compiles one clear answer, shows where they agree, and flags where they don&apos;t.
           </p>
 
-          {/* Breathing tagline */}
-          <p
-            className="font-medium font-serif italic mb-8"
-            style={{
-              color: '#9B4163',
-              fontSize: '18px',
-              animation: 'breath 3s ease-in-out infinite',
-            }}
-          >
+          <p className="font-medium font-serif italic mb-8" style={{ color: '#9B4163', fontSize: '18px', animation: 'breath 3s ease-in-out infinite' }}>
             Because one AI&apos;s opinion isn&apos;t enough for decisions that matter.
           </p>
 
-          {/* Search box */}
-          <div
-            className="w-full bg-white rounded-2xl transition-all"
-            style={{
-              border: '1.5px solid #EDE8E3',
-              boxShadow: '0 2px 12px rgba(155, 65, 99, 0.06)',
-            }}
-          >
+          <div className="w-full bg-white rounded-2xl transition-all" style={{ border: '1.5px solid #EDE8E3', boxShadow: '0 2px 12px rgba(155, 65, 99, 0.06)' }}>
             <textarea
               className="w-full px-5 pt-4 pb-2 text-base placeholder-warm-muted bg-transparent resize-none focus:outline-none rounded-t-2xl leading-relaxed text-warm-black"
               placeholder="Ask a health question you want multiple AI perspectives on…"
               rows={3}
               value={query}
               onChange={(e) => { setQuery(e.target.value); setError(''); }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(query);
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(query); } }}
             />
             <div className="flex items-center justify-between px-4 pb-3.5 pt-1">
               <span className="text-xs text-warm-muted">{query.length} / 1500</span>
@@ -213,7 +253,6 @@ export default function HomePage() {
 
           {error && <p className="mt-2 text-sm" style={{ color: '#C0394F' }}>{error}</p>}
 
-          {/* Example prompts */}
           <div className="mt-5 flex flex-wrap gap-2 justify-center">
             {EXAMPLES.map((ex) => (
               <button
@@ -221,14 +260,8 @@ export default function HomePage() {
                 onClick={() => { setQuery(ex); setError(''); }}
                 className="text-xs px-3 py-1.5 rounded-full transition-colors text-left"
                 style={{ background: '#fff', border: '1px solid #EDE8E3', color: '#7A6E67' }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.borderColor = '#E8C4D0';
-                  (e.target as HTMLElement).style.color = '#9B4163';
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLElement).style.borderColor = '#EDE8E3';
-                  (e.target as HTMLElement).style.color = '#7A6E67';
-                }}
+                onMouseEnter={(e) => { (e.target as HTMLElement).style.borderColor = '#E8C4D0'; (e.target as HTMLElement).style.color = '#9B4163'; }}
+                onMouseLeave={(e) => { (e.target as HTMLElement).style.borderColor = '#EDE8E3'; (e.target as HTMLElement).style.color = '#7A6E67'; }}
               >
                 {ex}
               </button>
@@ -242,9 +275,7 @@ export default function HomePage() {
 
         {/* How it works */}
         <section id="how-it-works" className="w-full max-w-4xl mx-auto py-16 border-t border-warm-border">
-          <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">
-            How AskWomensAI works
-          </h2>
+          <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">How AskWomensAI works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
               { icon: Search, title: '1. Ask once', desc: 'Type your health question one time. No need to open four browser tabs or wonder which AI to trust.' },
@@ -252,10 +283,7 @@ export default function HomePage() {
               { icon: CheckCheck, title: '3. Get a compiled answer', desc: 'See what they agree on, where they differ, and a synthesized best answer to guide your next step.' },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex flex-col gap-3 bg-white rounded-2xl p-6 border border-warm-border">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: '#F7ECF0', border: '1px solid #E8C4D0' }}
-                >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#F7ECF0', border: '1px solid #E8C4D0' }}>
                   <Icon size={15} style={{ color: '#9B4163' }} />
                 </div>
                 <h3 className="font-semibold text-warm-black text-sm">{title}</h3>
@@ -265,30 +293,20 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* What you get */}
-        <section className="w-full max-w-4xl mx-auto py-12 border-t border-warm-border">
-          <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">
-            What you get in every result
+        {/* Why we're different */}
+        <section className="w-full max-w-4xl mx-auto py-14 border-t border-warm-border">
+          <div className="text-center mb-3">
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#9B4163' }}>One AI isn&apos;t enough</span>
+          </div>
+          <h2 className="font-serif text-4xl font-bold text-warm-black text-center mb-3">
+            Why we&apos;re different.
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { icon: Sparkles, label: 'Best Answer', desc: 'A synthesized recommendation based on the strongest overlapping insights from all four AIs.' },
-              { icon: CheckCheck, label: 'Consensus', desc: 'What the models broadly agree on — the clearest, most reliable signal.' },
-              { icon: GitFork, label: 'Disagreements', desc: 'Where the models meaningfully differ in recommendation or confidence.' },
-              { icon: AlignLeft, label: 'Raw Responses', desc: 'The full unedited answer from each AI — ChatGPT, Gemini, Claude, and Grok.' },
-            ].map(({ icon: Icon, label, desc }) => (
-              <div key={label} className="flex items-start gap-4 bg-white rounded-2xl p-5 border border-warm-border">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                  style={{ background: '#F7ECF0', border: '1px solid #E8C4D0' }}
-                >
-                  <Icon size={13} style={{ color: '#9B4163' }} />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm text-warm-black mb-1">{label}</p>
-                  <p className="text-sm text-warm-gray leading-relaxed">{desc}</p>
-                </div>
-              </div>
+          <p className="text-center text-warm-gray text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+            Every other health AI tool gives you one model&apos;s answer and calls it done. We built something fundamentally different.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {DIFF_CARDS.map((card) => (
+              <SpinningCard key={card.label} {...card} />
             ))}
           </div>
         </section>
@@ -296,10 +314,7 @@ export default function HomePage() {
         {/* Inline signup strip */}
         {showInlineSignup && (
           <section className="w-full max-w-4xl mx-auto py-14 border-t border-warm-border mb-8">
-            <div
-              className="rounded-3xl px-8 py-10 text-center"
-              style={{ background: '#F7ECF0', border: '1.5px solid #E8C4D0' }}
-            >
+            <div className="rounded-3xl px-8 py-10 text-center" style={{ background: '#F7ECF0', border: '1.5px solid #E8C4D0' }}>
               {stripDone ? (
                 <>
                   <p className="text-2xl mb-2">✓</p>
