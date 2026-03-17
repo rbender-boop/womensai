@@ -23,8 +23,8 @@ const EXAMPLES = [
 const DIFF_CARDS = [
   {
     icon: Sparkles,
-    label: 'We ask 4 AIs, not 1',
-    desc: "Every other health tool gives you one AI's opinion. We give you four — simultaneously — so no single model's blind spot becomes yours.",
+    label: 'We ask four AIs, so you don\'t have to',
+    desc: "One question. Four AI perspectives. Simultaneously. You get the combined intelligence of ChatGPT, Gemini, Claude, and Grok — without opening a single extra tab.",
     delay: '0s',
   },
   {
