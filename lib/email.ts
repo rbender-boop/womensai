@@ -1,5 +1,5 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM = 'AskWomensAI <noreply@askwomensai.com>';
+const FROM = 'Kelly at AskWomensAI <kelly@askwomensai.com>';
 
 export async function sendWelcomeEmail(to: string) {
   if (!RESEND_API_KEY) {
