@@ -5,9 +5,9 @@
 
 ## Product Decisions (Confirmed This Session)
 
-1. **Click-through behavior on `/q/[slug]`** — User lands on the full results page (existing `/results/[id]` pattern) showing the synthesized Best Answer / Consensus / Disagreements / Raw Responses. The "4 AIs running" loading experience is shown even though answers hit cache instantly — users must feel the experience.
+1. **Click-through on `/q/[slug]`** — User lands on the full existing results page (`/results/[id]`) showing Best Answer / Consensus / Disagreements / Raw Responses. The "4 AIs running" loading animation plays even though the answer resolves from cache instantly — users must feel the experience.
 2. **Weird Questions** — Own nav link in the header (not a tab inside the Questions page).
-3. **Answer generation** — Claude generates all 500+ questions, then they are run through the live system (Rob's expense, one-time cost ~$15–40). Results are saved to Supabase cache. On user click, the loading experience fires but resolves from cache — free and instant.
+3. **Answer generation** — Claude generates all 500+ questions, they are run through the live system once at Rob's expense (~$15–40 one-time). Results saved to Supabase cache. All subsequent user clicks are free + instant.
 
 ---
 
@@ -17,15 +17,15 @@
 ```sql
 CREATE TABLE public.curated_questions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug text UNIQUE NOT NULL,                  -- URL-safe slug e.g. "can-women-take-creatine"
-  question text NOT NULL,                     -- Full question text
-  category text NOT NULL,                     -- e.g. "Health", "Fitness", "Relationships"
-  age_group text,                             -- e.g. "20s", "30s", "40s", "50s+", "All"
-  is_weird boolean DEFAULT false,             -- true = appears on /weird page
-  is_featured boolean DEFAULT false,          -- future: homepage featured questions
-  search_request_id uuid REFERENCES search_requests(id), -- FK to cached result
-  meta_title text,                            -- SEO override
-  meta_description text,                     -- SEO override
+  slug text UNIQUE NOT NULL,
+  question text NOT NULL,
+  category text NOT NULL,
+  age_group text,
+  is_weird boolean DEFAULT false,
+  is_featured boolean DEFAULT false,
+  search_request_id uuid REFERENCES search_requests(id),
+  meta_title text,
+  meta_description text,
   created_at timestamptz DEFAULT now()
 );
 
@@ -34,67 +34,7 @@ CREATE INDEX idx_curated_questions_age_group ON public.curated_questions(age_gro
 CREATE INDEX idx_curated_questions_is_weird ON public.curated_questions(is_weird);
 ```
 
-### Migration File
-`supabase/migrations/007_curated_questions.sql`
-
----
-
-## New Pages
-
-### 1. `/questions` — Index Page
-- Lists all 500 questions as clickable links
-- Filterable by **category** (tabs or pills): Health, Fitness, Relationships, Career, Money, Sex, Parenting, Menopause, Wellness, Beauty
-- Filterable by **age group**: 20s, 30s, 40s, 50s+
-- Each question is a link to `/q/[slug]`
-- Page is SSG (static at build time from DB) for SEO
-- File: `app/questions/page.tsx`
-
-### 2. `/q/[slug]` — Individual Question Page (SEO-Optimized)
-- Statically generated at build time (`generateStaticParams`)
-- Shows the question prominently
-- Shows a **teaser/partial intro** (2-3 sentences from best answer) — enough for SEO indexing
-- Answer is NOT fully shown — gated behind a CTA
-- CTA: **"See what 4 AIs actually say →"** — fires the search (hits cache = instant, free)
-- User sees the full 4-AI loading experience, then lands on `/results/[id]`
-- Full SEO stack:
-  - `generateMetadata()` with unique title + description per question
-  - FAQ Schema JSON-LD (`{ "@type": "FAQPage" }`)
-  - Canonical URL
-  - OG tags for social sharing
-- File: `app/q/[slug]/page.tsx`
-
-### 3. `/weird` — Weird Questions Page
-- Own nav link in header
-- ~50 questions flagged `is_weird = true`
-- Different visual vibe: playful, punchy, more provocative cards
-- Each card has a prominent share button (Twitter/WhatsApp) for viral potential
-- Same mechanic: question visible, answer requires clicking through
-- File: `app/weird/page.tsx`
-
----
-
-## New API / Backend
-
-### `app/api/admin/seed-questions/route.ts`
-- Protected admin endpoint (requires `ADMIN_SECRET` header)
-- Reads `curated_questions` where `search_request_id IS NULL`
-- For each unseeded question: fires `/api/search` internally → saves `search_request_id` back to `curated_questions`
-- Runs in batches of 5 with 2s delay between batches (rate limiting)
-- Returns progress JSON: `{ seeded: N, failed: M, remaining: K }`
-
-### `app/api/questions/route.ts`
-- GET: returns questions filtered by category/age_group
-- Used by the `/questions` page client-side filtering
-
----
-
-## Sitemap Update
-- `app/sitemap.ts` — add all `/q/[slug]` URLs + `/questions` + `/weird`
-- Priority: `/q/[slug]` = 0.8, `/questions` = 0.9, `/weird` = 0.7
-
----
-
-## Question Categories & Distribution (500 total)
+### Question Categories & Distribution (500 total)
 
 | Category | Count | Age Groups |
 |---|---|---|
@@ -115,75 +55,118 @@ CREATE INDEX idx_curated_questions_is_weird ON public.curated_questions(is_weird
 
 ## SEO Strategy Per `/q/[slug]` Page
 
-```tsx
-// Example for: "Can women take creatine?"
+```
 title: "Can Women Take Creatine? 4 AIs Weigh In"
 description: "We asked ChatGPT, Gemini, Claude, and Grok if women should take creatine. Here's what they agreed on — and where they disagreed."
-JSON-LD: FAQPage schema with question + teaser answer
+JSON-LD: FAQPage schema with question + teaser answer snippet
 Canonical: https://www.askwomensai.com/q/can-women-take-creatine
 ```
 
-The teaser answer (2-3 sentences from `best_answer`) is rendered in the page HTML for Google to index — but the full answer is behind the CTA click.
+Teaser = first 2-3 sentences of `best_answer` rendered in HTML for Google.
+Full answer is gated — user must click "See what 4 AIs actually say →" to fire the search.
 
 ---
 
-## Build Sequence (Next Session)
-
-### Step 1 — DB Migration
-Create and run `supabase/migrations/007_curated_questions.sql`
-Paste SQL in chat AND push to GitHub (per standing instruction).
-
-### Step 2 — Generate 500 Questions
-Claude generates the full question list in this format:
-```json
-{ "question": "Can women take creatine?", "category": "Fitness & Exercise", "age_group": "All", "is_weird": false, "slug": "can-women-take-creatine" }
-```
-Insert all rows into `curated_questions` (via Supabase SQL or a seed script).
-
-### Step 3 — Seed Script
-Build and run `app/api/admin/seed-questions/route.ts`
-Fires each question through the live search pipeline → saves `search_request_id` back.
-Run in batches. Rob approves API cost before running.
-
-### Step 4 — `/q/[slug]` Page
-Build the individual SEO question page with teaser + CTA.
-Include `generateMetadata()`, JSON-LD, canonical.
-
-### Step 5 — `/questions` Index Page
-Build with category tabs + age group filter.
-SSG from DB.
-
-### Step 6 — `/weird` Page
-Build with playful design, share buttons, 50 weird questions.
-
-### Step 7 — Nav Update
-Add "Questions" and "Weird" to the header nav.
-
-### Step 8 — Sitemap
-Update `app/sitemap.ts` to include all new URLs.
+## SESSION-BY-SESSION BUILD PLAN
 
 ---
 
-## Files To Create (Summary)
+### SESSION A — Foundation
+**Goal: DB + question data ready. Nothing visible to users yet.**
+
+1. Create and run `supabase/migrations/007_curated_questions.sql` (paste SQL in chat + push to GitHub)
+2. Claude generates all 500 questions in JSON format (batched by category)
+3. Insert all 500 rows into `curated_questions` via Supabase SQL editor
+4. Verify rows are in DB with correct slugs, categories, age_groups, is_weird flags
+
+**Deliverable:** 500 rows in `curated_questions`, all with `search_request_id = NULL`
+**No user-facing changes yet.**
+
+---
+
+### SESSION B — Seed Pipeline
+**Goal: All 500 questions run through the live AI system and cached.**
+
+1. Build `app/api/admin/seed-questions/route.ts`
+   - Protected by `ADMIN_SECRET` header
+   - Reads all rows where `search_request_id IS NULL`
+   - Fires each through `/api/search` internally in batches of 5 (2s delay between batches)
+   - Writes `search_request_id` back to `curated_questions` on success
+   - Returns `{ seeded: N, failed: M, remaining: K }`
+2. Review estimated cost with Rob before running
+3. Run the seeder — all 500 questions get answers cached in Supabase
+4. Verify: spot-check 10 questions, confirm `search_request_id` is populated
+
+**Deliverable:** All 500 questions have cached answers. Zero ongoing AI cost for user clicks.
+**No user-facing changes yet.**
+
+---
+
+### SESSION C — Individual Question Pages (`/q/[slug]`)
+**Goal: SEO pages live for all 500 questions.**
+
+1. Build `app/q/[slug]/page.tsx`
+   - `generateStaticParams()` — pre-renders all 500 at deploy time
+   - `generateMetadata()` — unique title + description per question
+   - FAQ JSON-LD structured data
+   - Canonical URL + OG tags
+   - Shows: question heading + teaser (2-3 sentences from best_answer)
+   - CTA button: "See what 4 AIs actually say →" — fires search, resolves from cache, shows loading experience
+2. Build `app/api/questions/route.ts` (GET, filtered by category/age_group)
+3. Deploy and verify 3-5 pages render correctly with correct metadata
+
+**Deliverable:** 500 SEO-optimized pages live at `/q/[slug]`
+
+---
+
+### SESSION D — Questions Index + Weird Page + Nav
+**Goal: Discovery pages live. Users can browse the full library.**
+
+1. Build `app/questions/page.tsx`
+   - Category filter tabs/pills
+   - Age group filter
+   - All 500 questions as clickable links to `/q/[slug]`
+   - SSG from DB
+2. Build `app/weird/page.tsx`
+   - ~50 questions flagged `is_weird = true`
+   - Playful, punchy card design (different vibe from main Questions page)
+   - Prominent one-tap share buttons (Twitter + WhatsApp) pre-filled with question + URL
+   - Same answer-gated mechanic
+3. Update header nav: add "Questions" and "Weird" links
+4. Update `app/sitemap.ts` — add all `/q/[slug]`, `/questions`, `/weird` URLs
+
+**Deliverable:** Full questions library browsable. Weird section live with share buttons. Sitemap updated for Google.
+
+---
+
+## Files To Create (by session)
 
 ```
-supabase/migrations/007_curated_questions.sql
-scripts/seed-questions.ts               (optional local seed helper)
-app/api/admin/seed-questions/route.ts   (protected batch seeder)
-app/api/questions/route.ts              (filtered question list API)
-app/questions/page.tsx                  (index page)
-app/q/[slug]/page.tsx                   (individual SEO page)
-app/weird/page.tsx                      (weird questions page)
+SESSION A:
+  supabase/migrations/007_curated_questions.sql
+
+SESSION B:
+  app/api/admin/seed-questions/route.ts
+
+SESSION C:
+  app/q/[slug]/page.tsx
+  app/api/questions/route.ts
+
+SESSION D:
+  app/questions/page.tsx
+  app/weird/page.tsx
+  app/sitemap.ts (update)
+  components/header.tsx (update — add nav links)
 ```
 
 ---
 
 ## Key Technical Notes
 
-- **Cache hit mechanic**: When a user clicks a pre-seeded question, `/api/search` checks the cache first. The 4-AI loading animation plays (~2-3s), then instantly resolves from the stored `search_request_id`. No new API cost incurred.
-- **Static generation**: `/q/[slug]` pages use `generateStaticParams()` — built at deploy time. Fast, SEO-perfect, zero runtime cost per page view.
-- **Teaser extraction**: Pull first 2 sentences from `best_answer` field of the cached compiled result. Store as `meta_description` in `curated_questions`.
-- **Weird questions viral design**: Large question text, minimal chrome, one-tap share to Twitter/WhatsApp pre-populated with the question + URL.
+- **Cache hit mechanic**: `/api/search` checks cache on every query. Pre-seeded questions resolve instantly. Loading animation still plays (~2-3s artificial minimum) so users feel the 4-AI experience.
+- **Static generation**: `generateStaticParams()` on `/q/[slug]` — all pages pre-built at deploy. Fast, SEO-perfect, zero runtime cost per page view.
+- **Seeder safety**: Run in batches of 5 with delay to avoid hammering provider APIs. If a question fails, it stays `search_request_id = NULL` and can be re-run.
+- **Weird questions**: Designed for screenshotting and sharing. Large question text, minimal chrome, one-tap share pre-populated with question + URL.
 
 ---
 
