@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendWelcomeEmail } from '@/lib/email';
 
 function getClient() {
   const url = process.env.SUPABASE_URL;
@@ -16,27 +17,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
     const supabase = getClient();
+    let isNewSignup = true;
 
     if (supabase) {
-      // Upsert so duplicate emails don't throw errors
+      // Check if already signed up — don't resend welcome email to existing users
+      const { data: existing } = await supabase
+        .from('email_signups')
+        .select('email')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      isNewSignup = !existing;
+
       const { error } = await supabase
         .from('email_signups')
         .upsert(
-          {
-            email: email.toLowerCase().trim(),
-            signed_up_at: new Date().toISOString(),
-          },
+          { email: normalizedEmail, signed_up_at: new Date().toISOString() },
           { onConflict: 'email' }
         );
 
       if (error) {
         console.error('Supabase signup error:', error);
-        // Still return success — don't block UX over a DB error
       }
-    } else {
-      // Supabase not configured — log and continue
-      console.log('Signup captured (no Supabase):', email);
+    }
+
+    // Only send welcome email to brand new signups
+    if (isNewSignup) {
+      await sendWelcomeEmail(normalizedEmail);
     }
 
     return NextResponse.json({ success: true });
