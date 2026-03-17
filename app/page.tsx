@@ -144,7 +144,6 @@ export default function HomePage() {
     const ageRange = followupAnswers['age'] || undefined;
 
     if (!skip) {
-      // Build enriched query from text answers (not age — age goes as separate param)
       const contextParts = followupQuestions
         .filter((fq) => fq.type === 'text')
         .map((fq) => {
@@ -153,7 +152,6 @@ export default function HomePage() {
         })
         .filter(Boolean) as string[];
 
-      // Also include age in the query context if provided
       const allParts: string[] = [];
       if (ageRange) allParts.push(`Age range: ${ageRange}`);
       allParts.push(...contextParts);
@@ -391,7 +389,6 @@ export default function HomePage() {
                           <label className="block text-sm mb-2" style={{ color: '#4A4540', fontWeight: 500 }}>{fq.question}</label>
 
                           {fq.type === 'age_range' && fq.options ? (
-                            // Age range: clickable pill chips
                             <div className="flex flex-wrap gap-2">
                               {fq.options.map((opt) => {
                                 const selected = followupAnswers['age'] === opt;
@@ -417,7 +414,6 @@ export default function HomePage() {
                               })}
                             </div>
                           ) : (
-                            // Other questions: text input
                             <input
                               type="text"
                               value={followupAnswers[fq.id] || ''}
@@ -480,7 +476,7 @@ export default function HomePage() {
             </div>
 
             <p className="mt-5 text-xs" style={{ color: '#AFA8A2' }}>
-              5 free questions per day · No account required · Always consult a healthcare provider
+              5 free questions per day · No account required · Not medical advice · Always consult your doctor
             </p>
           </div>
         </section>
@@ -592,7 +588,7 @@ export default function HomePage() {
           <div className="flex items-center">
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#1C1714' }}>AskWomens</span>
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#8B3058', fontStyle: 'italic' }}>AI</span>
-            <span className="ml-2 text-xs" style={{ color: '#AFA8A2' }}>© 2025</span>
+            <span className="ml-2 text-xs" style={{ color: '#AFA8A2' }}>© 2026</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="/questions" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Questions</a>
@@ -602,7 +598,7 @@ export default function HomePage() {
             <a href="/about" style={{ fontSize: '12px', transition: 'color 0.15s' }}>About</a>
           </div>
           <p className="text-xs text-center sm:text-right" style={{ color: '#AFA8A2', maxWidth: '280px', lineHeight: 1.6 }}>
-            For research only. Always consult a qualified healthcare provider before making health decisions.
+            For informational purposes only. Always consult a qualified healthcare provider before making health decisions.
           </p>
         </div>
       </footer>
