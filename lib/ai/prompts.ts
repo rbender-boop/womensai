@@ -1,7 +1,16 @@
+// Enriches the raw user query with female context before sending to AI providers.
+// The user never sees this — it ensures all four AIs answer from a female perspective.
+export function enrichQueryForWoman(query: string): string {
+  const q = query.trim();
+  // Avoid double-injecting if somehow already present
+  if (/\b(woman|female|she|her)\b/i.test(q)) return q;
+  return `${q} (I am a woman)`;
+}
+
 export const PROVIDER_PROMPT_TEMPLATE = (query: string) => `You are helping a woman understand her health situation so she can be better informed.
 
 User question:
-${query}
+${enrichQueryForWoman(query)}
 
 Instructions:
 - Give a direct, practical answer first.
