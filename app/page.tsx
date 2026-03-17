@@ -31,23 +31,23 @@ const DIFF_CARDS = [
     icon: GitFork,
     label: 'We show you the disagreements',
     desc: 'When AIs contradict each other on your health, that matters. We surface those conflicts clearly. Other tools bury them.',
-    delay: '0.75s',
+    delay: '1s',
   },
   {
     icon: CheckCheck,
     label: 'We synthesize, not just dump',
     desc: 'You don\'t get four raw walls of text. You get one compiled recommendation — built from the strongest overlapping insights across all four models.',
-    delay: '1.5s',
+    delay: '2s',
   },
   {
     icon: Brain,
     label: 'Your answers get smarter over time',
     desc: 'Sign up free and your history shapes every future answer. The more you ask, the more personalized your results become — not just your last question.',
-    delay: '2.25s',
+    delay: '3s',
   },
 ];
 
-function SpinningCard({
+function GlowCard({
   icon: Icon,
   label,
   desc,
@@ -59,37 +59,23 @@ function SpinningCard({
   delay: string;
 }) {
   return (
-    <div style={{ position: 'relative', padding: '2px', borderRadius: '18px' }}>
-      {/* Spinning ring */}
+    <div
+      className="flex items-start gap-4 bg-white rounded-2xl p-6"
+      style={{
+        border: '1px solid #EDE8E3',
+        animation: 'softGlow 4s ease-in-out infinite',
+        animationDelay: delay,
+      }}
+    >
       <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '18px',
-          padding: '2px',
-          background: 'conic-gradient(from 0deg, transparent 0%, #9B4163 20%, #E8C4D0 40%, transparent 60%)',
-          animation: `spinRing 3s linear infinite`,
-          animationDelay: delay,
-          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-          WebkitMaskComposite: 'xor',
-          maskComposite: 'exclude',
-        }}
-      />
-      {/* Card content */}
-      <div
-        className="flex items-start gap-4 bg-white rounded-2xl p-5 h-full"
-        style={{ position: 'relative', zIndex: 1 }}
+        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+        style={{ background: '#F7ECF0', border: '1px solid #E8C4D0' }}
       >
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-          style={{ background: '#F7ECF0', border: '1px solid #E8C4D0' }}
-        >
-          <Icon size={15} style={{ color: '#9B4163' }} />
-        </div>
-        <div>
-          <p className="font-bold text-sm text-warm-black mb-1.5">{label}</p>
-          <p className="text-sm text-warm-gray leading-relaxed">{desc}</p>
-        </div>
+        <Icon size={15} style={{ color: '#9B4163' }} />
+      </div>
+      <div>
+        <p className="font-bold text-sm text-warm-black mb-1.5">{label}</p>
+        <p className="text-sm text-warm-gray leading-relaxed">{desc}</p>
       </div>
     </div>
   );
@@ -156,11 +142,16 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-cream">
 
-      {/* Spinning ring keyframes */}
       <style>{`
-        @keyframes spinRing {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
+        @keyframes softGlow {
+          0%, 100% {
+            box-shadow: 0 1px 3px rgba(155, 65, 99, 0.04);
+            border-color: #EDE8E3;
+          }
+          50% {
+            box-shadow: 0 4px 24px rgba(155, 65, 99, 0.13);
+            border-color: #E8C4D0;
+          }
         }
       `}</style>
 
@@ -306,7 +297,7 @@ export default function HomePage() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {DIFF_CARDS.map((card) => (
-              <SpinningCard key={card.label} {...card} />
+              <GlowCard key={card.label} {...card} />
             ))}
           </div>
         </section>
