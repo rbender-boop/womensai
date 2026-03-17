@@ -8,6 +8,7 @@ import {
   recordSession,
   recordQuestion,
   useSignupTrigger,
+  isSignedUp,
 } from '@/hooks/use-signup-trigger';
 
 const EXAMPLES = [
@@ -24,12 +25,21 @@ export default function HomePage() {
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [questionJustAsked, setQuestionJustAsked] = useState(false);
+  const [showInlineSignup, setShowInlineSignup] = useState(false);
+  const [forceModal, setForceModal] = useState(false);
+
+  // Inline strip state
+  const [stripEmail, setStripEmail] = useState('');
+  const [stripLoading, setStripLoading] = useState(false);
+  const [stripDone, setStripDone] = useState(false);
+  const [stripError, setStripError] = useState('');
 
   const { variant, dismiss, onSignedUp } = useSignupTrigger(questionJustAsked);
 
-  // Record session on first mount
   useEffect(() => {
     recordSession();
+    // Don't show signup strip to already signed-up users
+    setShowInlineSignup(!isSignedUp());
   }, []);
 
   function handleSubmit(q: string) {
@@ -43,24 +53,51 @@ export default function HomePage() {
       return;
     }
     setError('');
-
-    // Track question and trigger prompt evaluation
     recordQuestion();
     setQuestionJustAsked(true);
     setTimeout(() => setQuestionJustAsked(false), 500);
-
     const encoded = encodeURIComponent(trimmed);
     router.push(`/results/new?q=${encoded}`);
   }
 
+  async function handleStripSignup() {
+    const trimmed = stripEmail.trim();
+    if (!trimmed.includes('@')) {
+      setStripError('Please enter a valid email.');
+      return;
+    }
+    setStripLoading(true);
+    setStripError('');
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      if (res.ok) {
+        setStripDone(true);
+        localStorage.setItem('wai_signed_up', '1');
+        setShowInlineSignup(false);
+      } else {
+        setStripError('Something went wrong. Please try again.');
+      }
+    } catch {
+      setStripError('Something went wrong. Please try again.');
+    } finally {
+      setStripLoading(false);
+    }
+  }
+
+  const activeVariant = forceModal ? 'modal' : variant;
+
   return (
     <div className="min-h-screen flex flex-col bg-cream">
       {/* Signup prompt (banner or modal) */}
-      {variant && (
+      {activeVariant && (
         <SignupPrompt
-          variant={variant}
-          onDismiss={dismiss}
-          onSignedUp={onSignedUp}
+          variant={activeVariant}
+          onDismiss={() => { setForceModal(false); dismiss(); }}
+          onSignedUp={() => { setForceModal(false); setShowInlineSignup(false); onSignedUp(); }}
         />
       )}
 
@@ -74,6 +111,15 @@ export default function HomePage() {
           <a href="#how-it-works" className="hover:text-warm-black transition-colors">How it works</a>
           <a href="/about" className="hover:text-warm-black transition-colors">About</a>
           <a href="/pricing" className="hover:text-warm-black transition-colors">Pricing</a>
+          {!stripDone && (
+            <button
+              onClick={() => setForceModal(true)}
+              className="text-sm font-semibold px-4 py-2 rounded-xl transition-opacity hover:opacity-85"
+              style={{ background: '#9B4163', color: '#fff' }}
+            >
+              Sign up free
+            </button>
+          )}
         </nav>
       </header>
 
@@ -220,7 +266,7 @@ export default function HomePage() {
         </section>
 
         {/* What you get */}
-        <section className="w-full max-w-4xl mx-auto py-12 border-t border-warm-border mb-16">
+        <section className="w-full max-w-4xl mx-auto py-12 border-t border-warm-border">
           <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">
             What you get in every result
           </h2>
@@ -246,6 +292,54 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* Inline signup strip */}
+        {showInlineSignup && (
+          <section className="w-full max-w-4xl mx-auto py-14 border-t border-warm-border mb-8">
+            <div
+              className="rounded-3xl px-8 py-10 text-center"
+              style={{ background: '#F7ECF0', border: '1.5px solid #E8C4D0' }}
+            >
+              {stripDone ? (
+                <>
+                  <p className="text-2xl mb-2">✓</p>
+                  <p className="font-serif text-xl font-bold text-warm-black">You&apos;re in.</p>
+                  <p className="text-sm text-warm-gray mt-2">Check your inbox — your answers just got personal.</p>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-serif text-2xl font-bold mb-3" style={{ color: '#1C1714' }}>
+                    Sign up free — get answers personalized to your health history, not just your last question.
+                  </h2>
+                  <p className="text-sm text-warm-gray mb-7 max-w-md mx-auto leading-relaxed">
+                    The more you ask, the more personalized your answers become. No credit card. No commitment.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
+                    <input
+                      type="email"
+                      placeholder="your@email.com"
+                      value={stripEmail}
+                      onChange={(e) => { setStripEmail(e.target.value); setStripError(''); }}
+                      onKeyDown={(e) => e.key === 'Enter' && handleStripSignup()}
+                      className="flex-1 text-sm px-4 py-3 rounded-xl border border-warm-border bg-white focus:outline-none text-warm-black placeholder-warm-muted"
+                    />
+                    <button
+                      onClick={handleStripSignup}
+                      disabled={stripLoading}
+                      className="text-sm font-semibold px-6 py-3 rounded-xl transition-opacity disabled:opacity-60 shrink-0"
+                      style={{ background: '#9B4163', color: '#fff' }}
+                    >
+                      {stripLoading ? 'Signing up...' : 'Sign up free'}
+                    </button>
+                  </div>
+                  {stripError && <p className="mt-2 text-xs" style={{ color: '#C0394F' }}>{stripError}</p>}
+                  <p className="mt-4 text-xs text-warm-muted">No spam. Unsubscribe anytime.</p>
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
       </main>
 
       {/* Footer */}
