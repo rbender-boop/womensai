@@ -1,18 +1,10 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { PROVIDER_PROMPT_TEMPLATE } from '@/lib/ai/prompts';
 import { PROVIDER_TIMEOUT_MS, PROVIDER_MAX_TOKENS } from '@/lib/ai/types';
 import type { ProviderResult } from '@/types/search';
 
 const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const ENABLED = process.env.ENABLE_GEMINI !== 'false';
-
-// Lower safety thresholds so women's health content isn't blocked
-const SAFETY_SETTINGS = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-];
 
 export async function runGemini(query: string): Promise<ProviderResult> {
   const base: ProviderResult = {
@@ -34,33 +26,30 @@ export async function runGemini(query: string): Promise<ProviderResult> {
   const start = Date.now();
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      generationConfig: { maxOutputTokens: PROVIDER_MAX_TOKENS },
-      safetySettings: SAFETY_SETTINGS,
-    });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Gemini timeout')), PROVIDER_TIMEOUT_MS)
     );
 
-    const resultPromise = model.generateContent(PROVIDER_PROMPT_TEMPLATE(query));
+    const resultPromise = ai.models.generateContent({
+      model: MODEL,
+      contents: PROVIDER_PROMPT_TEMPLATE(query),
+      config: {
+        maxOutputTokens: PROVIDER_MAX_TOKENS,
+        // Lower safety thresholds for women's health content
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+        ],
+      },
+    });
+
     const result = await Promise.race([resultPromise, timeoutPromise]);
 
-    // Check if response was blocked by safety filters
-    const candidate = result.response.candidates?.[0];
-    if (!candidate || candidate.finishReason === 'SAFETY') {
-      console.error('[Gemini] Response blocked by safety filters for query:', query);
-      return {
-        ...base,
-        status: 'error',
-        latencyMs: Date.now() - start,
-        errorMessage: 'Response blocked by Gemini safety filters',
-      };
-    }
-
-    const text = result.response.text();
+    const text = result.text;
 
     if (!text || text.trim().length === 0) {
       console.error('[Gemini] Empty response for query:', query);

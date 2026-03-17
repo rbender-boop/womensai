@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^1.0.0",
     "@supabase/supabase-js": "^2.99.2",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
