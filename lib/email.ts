@@ -45,7 +45,7 @@ export async function sendWelcomeEmail(to: string) {
                     The more you ask, the smarter and more personalized your answers get — and your questions always remain anonymous.
                   </p>
                   <p style="margin:0 0 28px;font-size:15px;color:#5C524D;line-height:1.7;">
-                    Keep asking. The more context we have, the better your answers get.
+                    Keep asking. The more context we have, the better and more personalized your answers get.
                   </p>
 
                   <!-- CTA -->
