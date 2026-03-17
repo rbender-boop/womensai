@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { DM_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
+import { QotdBanner } from '@/components/qotd-banner';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -32,6 +33,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${dmSans.variable} ${playfair.variable} font-sans antialiased bg-cream text-warm-black`}
       >
+        {/* Question of the Day — appears above every page */}
+        <QotdBanner />
         {children}
       </body>
     </html>

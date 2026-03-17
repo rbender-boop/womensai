@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sendWelcomeEmail } from '@/lib/email';
+import { sendWelcomeEmail, sendSignupNotification } from '@/lib/email';
 
 function getClient() {
   const url = process.env.SUPABASE_URL;
@@ -11,7 +11,8 @@ function getClient() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const { email, source } = body;
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     let isNewSignup = true;
 
     if (supabase) {
-      // Check if already signed up — don't resend welcome email to existing users
+      // Check if already signed up — don't resend emails to existing users
       const { data: existing } = await supabase
         .from('email_signups')
         .select('email')
@@ -34,7 +35,11 @@ export async function POST(req: NextRequest) {
       const { error } = await supabase
         .from('email_signups')
         .upsert(
-          { email: normalizedEmail, signed_up_at: new Date().toISOString() },
+          {
+            email: normalizedEmail,
+            signed_up_at: new Date().toISOString(),
+            source: source ?? 'unknown',
+          },
           { onConflict: 'email' }
         );
 
@@ -43,9 +48,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Only send welcome email to brand new signups
     if (isNewSignup) {
+      // Send welcome email to new user
       await sendWelcomeEmail(normalizedEmail);
+
+      // Notify kelly@ of new signup
+      await sendSignupNotification({
+        email: normalizedEmail,
+        signedUpAt: new Date().toISOString(),
+        source: source ?? 'unknown',
+      });
     }
 
     return NextResponse.json({ success: true });
