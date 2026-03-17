@@ -16,9 +16,12 @@ interface CuratedQuestion {
 interface Props {
   question: CuratedQuestion;
   teaser: string | null;
+  bestAnswer: string | null;
+  consensus: string[];
+  disagreements: string[];
 }
 
-export default function QuestionPageClient({ question, teaser }: Props) {
+export default function QuestionPageClient({ question, teaser, bestAnswer, consensus, disagreements }: Props) {
   const router = useRouter();
 
   function handleSeeAnswer() {
@@ -186,6 +189,32 @@ export default function QuestionPageClient({ question, teaser }: Props) {
               <ArrowRight size={13} />
             </a>
           </div>
+
+          {/* Visually hidden full answer — visible to Google, invisible to users */}
+          {bestAnswer && (
+            <div aria-hidden="true" style={{
+              position: 'absolute',
+              left: '-9999px',
+              width: '1px',
+              height: '1px',
+              overflow: 'hidden',
+            }}>
+              <h2>Best Answer</h2>
+              <p>{bestAnswer}</p>
+              {consensus.length > 0 && (
+                <>
+                  <h2>Where the AIs Agree</h2>
+                  <ul>{consensus.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                </>
+              )}
+              {disagreements.length > 0 && (
+                <>
+                  <h2>Where the AIs Disagree</h2>
+                  <ul>{disagreements.map((d, i) => <li key={i}>{d}</li>)}</ul>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
