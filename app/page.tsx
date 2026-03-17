@@ -298,11 +298,11 @@ export default function HomePage() {
             One answer.
           </h1>
 
-          <p className="hero-3 mx-auto mb-3" style={{ fontSize: '17px', color: '#6B6560', maxWidth: '500px', lineHeight: 1.8 }}>
+          <p className="hero-3 mx-auto mb-3" style={{ fontSize: '17px', color: '#6B6560', maxWidth: '440px', lineHeight: 1.8, textAlign: 'center' }}>
             Health. Fitness. Wellness. Beauty. Ask once and get the combined perspective of ChatGPT, Gemini, Claude, and Grok — compiled into one clear, trustworthy answer.
           </p>
 
-          <p className="hero-3 mx-auto mb-8" style={{ fontSize: '15px', color: '#7A6E67', maxWidth: '500px', lineHeight: 1.75 }}>
+          <p className="hero-3 mx-auto mb-8" style={{ fontSize: '15px', color: '#7A6E67', maxWidth: '380px', lineHeight: 1.75, textAlign: 'center' }}>
             See how the AIs agree — or if they disagree on certain key points — in 60 seconds or less.
           </p>
 
