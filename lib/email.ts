@@ -91,7 +91,7 @@ export async function sendWelcomeEmail(to: string) {
       body: JSON.stringify({
         from: FROM,
         to: [to],
-        subject: 'You're in — your answers just got personal',
+        subject: "You're in — your answers just got personal",
         html,
       }),
     });
