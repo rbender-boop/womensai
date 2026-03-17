@@ -34,7 +34,6 @@ export async function upsertAnonSession(
       acquisition_campaign: meta.acquisitionCampaign,
     });
   } else {
-    // Update last_seen and increment session count on new day visits
     await supabase
       .from('anonymous_sessions')
       .update({ last_seen_at: new Date().toISOString() })
@@ -50,7 +49,8 @@ export async function persistSearch(
   compiled: CompiledResult,
   totalLatencyMs: number,
   ipHash: string,
-  sessionId?: string
+  sessionId?: string,
+  ageRange?: string  // captured from follow-up question for segmentation
 ) {
   const supabase = getClient();
   if (!supabase) return;
@@ -70,6 +70,7 @@ export async function persistSearch(
       success_provider_count: successful,
       failed_provider_count: failed,
       provider_success_count: successful,
+      age_range: ageRange ?? null,
     });
 
     await supabase.from('provider_results').insert(
@@ -93,7 +94,6 @@ export async function persistSearch(
       synthesis_model: compiled.synthesisModel,
     });
 
-    // Increment question count on session
     if (sessionId) {
       await supabase.rpc('increment_session_question_count', { session_id: sessionId });
     }
@@ -103,7 +103,6 @@ export async function persistSearch(
 }
 
 // ── Tag and write back ───────────────────────────────────────────────────────
-// Fires after the response is sent. Never blocks the user.
 export async function tagAndUpdateSearch(requestId: string, query: string) {
   const supabase = getClient();
   if (!supabase) return;

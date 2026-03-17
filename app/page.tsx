@@ -10,6 +10,7 @@ import {
   useSignupTrigger,
   isSignedUp,
 } from '@/hooks/use-signup-trigger';
+import type { FollowupQuestion } from '@/app/api/followup-questions/route';
 
 const EXAMPLES = [
   'What are the best natural ways to manage PCOS symptoms?',
@@ -88,8 +89,8 @@ export default function HomePage() {
 
   // Follow-up question states
   const [followupState, setFollowupState] = useState<'idle' | 'loading' | 'ready'>('idle');
-  const [followupQuestions, setFollowupQuestions] = useState<string[]>([]);
-  const [followupAnswers, setFollowupAnswers] = useState<string[]>([]);
+  const [followupQuestions, setFollowupQuestions] = useState<FollowupQuestion[]>([]);
+  const [followupAnswers, setFollowupAnswers] = useState<Record<string, string>>({});
 
   const { variant, dismiss, onSignedUp } = useSignupTrigger(questionJustAsked);
 
@@ -98,13 +99,14 @@ export default function HomePage() {
     setShowInlineSignup(!isSignedUp());
   }, []);
 
-  function navigate(enrichedQuery: string, displayQuery: string) {
+  function navigate(enrichedQuery: string, displayQuery: string, ageRange?: string) {
     recordQuestion();
     setQuestionJustAsked(true);
     setTimeout(() => setQuestionJustAsked(false), 500);
     const q = encodeURIComponent(enrichedQuery);
     const dq = enrichedQuery !== displayQuery ? `&dq=${encodeURIComponent(displayQuery)}` : '';
-    router.push(`/results/new?q=${q}${dq}`);
+    const ar = ageRange ? `&ar=${encodeURIComponent(ageRange)}` : '';
+    router.push(`/results/new?q=${q}${dq}${ar}`);
   }
 
   async function handleSubmit(q: string) {
@@ -114,7 +116,7 @@ export default function HomePage() {
     setError('');
     setFollowupState('loading');
     setFollowupQuestions([]);
-    setFollowupAnswers([]);
+    setFollowupAnswers({});
 
     try {
       const res = await fetch('/api/followup-questions', {
@@ -125,15 +127,13 @@ export default function HomePage() {
       const data = await res.json();
       if (Array.isArray(data.questions) && data.questions.length > 0) {
         setFollowupQuestions(data.questions);
-        setFollowupAnswers(new Array(data.questions.length).fill(''));
+        setFollowupAnswers({});
         setFollowupState('ready');
       } else {
-        // No questions returned — go straight to results
         setFollowupState('idle');
         navigate(trimmed, trimmed);
       }
     } catch {
-      // On any error, skip follow-ups
       setFollowupState('idle');
       navigate(trimmed, trimmed);
     }
@@ -141,17 +141,28 @@ export default function HomePage() {
 
   function handleFinalSubmit(skip = false) {
     const trimmed = query.trim();
-    if (!skip && followupAnswers.some(a => a.trim())) {
+    const ageRange = followupAnswers['age'] || undefined;
+
+    if (!skip) {
+      // Build enriched query from text answers (not age — age goes as separate param)
       const contextParts = followupQuestions
-        .map((fq, i) => {
-          const ans = followupAnswers[i]?.trim();
-          return ans ? `${fq} ${ans}` : null;
+        .filter((fq) => fq.type === 'text')
+        .map((fq) => {
+          const ans = followupAnswers[fq.id]?.trim();
+          return ans ? `${fq.question} ${ans}` : null;
         })
         .filter(Boolean) as string[];
-      const enriched = contextParts.length > 0
-        ? `${trimmed}. Additional context: ${contextParts.join('. ')}`
+
+      // Also include age in the query context if provided
+      const allParts: string[] = [];
+      if (ageRange) allParts.push(`Age range: ${ageRange}`);
+      allParts.push(...contextParts);
+
+      const enriched = allParts.length > 0
+        ? `${trimmed}. Additional context: ${allParts.join('. ')}`
         : trimmed;
-      navigate(enriched, trimmed);
+
+      navigate(enriched, trimmed, ageRange);
     } else {
       navigate(trimmed, trimmed);
     }
@@ -211,6 +222,8 @@ export default function HomePage() {
         .pill-ex { transition: all 0.18s ease; }
         .pill-ex:hover { background: rgba(139,48,88,0.07) !important; border-color: #DCA8C0 !important; color: #8B3058 !important; }
         .followup-in { animation: floatIn 0.35s ease both; }
+        .age-chip { transition: all 0.15s ease; cursor: pointer; }
+        .age-chip:hover { border-color: #9B4163 !important; color: #9B4163 !important; }
       `}</style>
 
       {activeVariant && (
@@ -372,28 +385,54 @@ export default function HomePage() {
                     <p className="text-xs font-semibold uppercase mb-4" style={{ color: '#9B4163', letterSpacing: '2.5px' }}>
                       Help us tailor your answer
                     </p>
-                    <div className="space-y-3">
-                      {followupQuestions.map((fq, i) => (
-                        <div key={i}>
-                          <label className="block text-sm mb-1.5" style={{ color: '#4A4540' }}>{fq}</label>
-                          <input
-                            type="text"
-                            value={followupAnswers[i] || ''}
-                            onChange={e => {
-                              const next = [...followupAnswers];
-                              next[i] = e.target.value;
-                              setFollowupAnswers(next);
-                            }}
-                            onKeyDown={e => { if (e.key === 'Enter') handleFinalSubmit(); }}
-                            placeholder="Optional — leave blank to skip"
-                            className="w-full text-sm px-4 py-2.5 focus:outline-none"
-                            style={{
-                              background: 'rgba(253,245,248,0.8)',
-                              border: '1px solid rgba(212,167,185,0.4)',
-                              borderRadius: '12px',
-                              color: '#1C1714',
-                            }}
-                          />
+                    <div className="space-y-4">
+                      {followupQuestions.map((fq) => (
+                        <div key={fq.id}>
+                          <label className="block text-sm mb-2" style={{ color: '#4A4540', fontWeight: 500 }}>{fq.question}</label>
+
+                          {fq.type === 'age_range' && fq.options ? (
+                            // Age range: clickable pill chips
+                            <div className="flex flex-wrap gap-2">
+                              {fq.options.map((opt) => {
+                                const selected = followupAnswers['age'] === opt;
+                                return (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => setFollowupAnswers(prev => ({ ...prev, age: selected ? '' : opt }))}
+                                    className="age-chip text-xs px-3.5 py-1.5 rounded-full border font-medium"
+                                    style={selected ? {
+                                      background: '#9B4163',
+                                      color: '#fff',
+                                      borderColor: '#9B4163',
+                                    } : {
+                                      background: 'rgba(253,245,248,0.8)',
+                                      color: '#7A6E67',
+                                      borderColor: 'rgba(212,167,185,0.5)',
+                                    }}
+                                  >
+                                    {opt}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            // Other questions: text input
+                            <input
+                              type="text"
+                              value={followupAnswers[fq.id] || ''}
+                              onChange={e => setFollowupAnswers(prev => ({ ...prev, [fq.id]: e.target.value }))}
+                              onKeyDown={e => { if (e.key === 'Enter') handleFinalSubmit(); }}
+                              placeholder="Optional — leave blank to skip"
+                              className="w-full text-sm px-4 py-2.5 focus:outline-none"
+                              style={{
+                                background: 'rgba(253,245,248,0.8)',
+                                border: '1px solid rgba(212,167,185,0.4)',
+                                borderRadius: '12px',
+                                color: '#1C1714',
+                              }}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>

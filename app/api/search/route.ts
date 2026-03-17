@@ -58,6 +58,12 @@ export async function POST(req: NextRequest) {
   }
 
   const { query } = parsed.data;
+  // age_range is optional — passed when user answered the age follow-up question
+  const ageRange: string | undefined =
+    typeof (body as Record<string, unknown>).ageRange === 'string'
+      ? String((body as Record<string, unknown>).ageRange)
+      : undefined;
+
   const ipHash = getIpHash(req);
 
   // ── Anonymous session ────────────────────────────────────────────────────────
@@ -65,7 +71,6 @@ export async function POST(req: NextRequest) {
   const sessionId = existingSession ?? nanoid();
   const isNewSession = !existingSession;
 
-  // Upsert session row fire-and-forget
   upsertAnonSession(sessionId, isNewSession, {
     deviceType: getDeviceType(req),
     acquisitionChannel: req.nextUrl.searchParams.get('utm_source') ?? undefined,
@@ -118,7 +123,6 @@ export async function POST(req: NextRequest) {
       return res;
     }
   }
-  // ── End cache lookup ──────────────────────────────────────────────────────────
 
   const settled = await Promise.allSettled([
     runOpenAI(query),
@@ -151,10 +155,10 @@ export async function POST(req: NextRequest) {
   const totalLatencyMs = Date.now() - start;
 
   // Persist + cache fire-and-forget
-  persistSearch(requestId, query, providers, compiled, totalLatencyMs, ipHash, sessionId).catch(console.error);
+  persistSearch(requestId, query, providers, compiled, totalLatencyMs, ipHash, sessionId, ageRange).catch(console.error);
   saveToCache(normalized, queryHash, embedding, compiled, providers).catch(console.error);
 
-  // Tag fire-and-forget — never blocks response
+  // Tag fire-and-forget
   tagAndUpdateSearch(requestId, query).catch(console.error);
 
   const response: SearchResponse = {
