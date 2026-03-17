@@ -41,8 +41,8 @@ const DIFF_CARDS = [
   },
   {
     icon: Brain,
-    label: 'I get smarter every time you ask',
-    desc: 'The more questions you ask, the smarter I get — and the more personalized your responses become. Sign up free to build that context.',
+    label: 'It gets smarter every time you ask',
+    desc: 'The more questions you ask, the smarter it gets — and the more personalized your responses become. Sign up free to build that context.',
     delay: '3s',
   },
 ];
