@@ -179,7 +179,7 @@ export default function HomePage() {
           </div>
           <nav className="hidden sm:flex items-center gap-7 text-sm" style={{ color: '#7A6E67' }}>
             <a href="#why-different" style={{ transition: 'color 0.15s' }} onMouseEnter={e => (e.target as HTMLElement).style.color='#1C1714'} onMouseLeave={e => (e.target as HTMLElement).style.color='#7A6E67'}>Why us</a>
-            <a href="#how-it-works" style={{ transition: 'color 0.15s' }} onMouseEnter={e => (e.target as HTMLElement).style.color='#1C1714'} onMouseLeave={e => (e.target as HTMLElement).style.color='#7A6E67'}>How it works</a>
+            <a href="/how-it-works" style={{ transition: 'color 0.15s' }} onMouseEnter={e => (e.target as HTMLElement).style.color='#1C1714'} onMouseLeave={e => (e.target as HTMLElement).style.color='#7A6E67'}>How it works</a>
             <a href="/about" style={{ transition: 'color 0.15s' }} onMouseEnter={e => (e.target as HTMLElement).style.color='#1C1714'} onMouseLeave={e => (e.target as HTMLElement).style.color='#7A6E67'}>About</a>
             {!stripDone && (
               <button
@@ -337,37 +337,6 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {DIFF_CARDS.map((card) => <LiftCard key={card.label} {...card} />)}
-          </div>
-        </section>
-
-        {/* Divider */}
-        <div className="w-full px-6" style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(155,65,99,0.2), transparent)' }} />
-        </div>
-
-        {/* HOW IT WORKS */}
-        <section id="how-it-works" className="w-full max-w-5xl mx-auto px-6 py-20">
-          <div className="text-center mb-14">
-            <h2 style={{ fontFamily: 'var(--font-playfair)', fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 700, color: '#1C1714' }}>
-              How it works
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { num: '01', title: 'Ask once', desc: 'Type your question one time. No need to open four browser tabs or wonder which AI to trust.' },
-              { num: '02', title: 'All four AIs answer', desc: 'ChatGPT, Gemini, Claude, and Grok all respond in parallel — usually in under 30 seconds.' },
-              { num: '03', title: 'Get a compiled answer', desc: 'See what they agree on, where they differ, and a synthesized best answer to guide your next step.' },
-            ].map(({ num, title, desc }) => (
-              <div key={num} className="flex flex-col gap-4 rounded-3xl p-8" style={{
-                background: 'rgba(255,255,255,0.62)',
-                border: '1px solid rgba(212,167,185,0.28)',
-                backdropFilter: 'blur(8px)',
-              }}>
-                <div style={{ fontFamily: 'var(--font-playfair)', fontSize: '52px', fontWeight: 700, color: 'rgba(155,65,99,0.16)', lineHeight: 1 }}>{num}</div>
-                <h3 style={{ fontFamily: 'var(--font-playfair)', fontSize: '17px', fontWeight: 700, color: '#1C1714' }}>{title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: '#7A6E67' }}>{desc}</p>
-              </div>
-            ))}
           </div>
         </section>
 
