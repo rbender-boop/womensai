@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { searchSchema } from '@/lib/validations';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { synthesizeResponses } from '@/lib/ai/synthesize';
-import { persistSearch } from '@/lib/db';
+import { persistSearch, upsertAnonSession, tagAndUpdateSearch } from '@/lib/db';
 import { runOpenAI } from '@/lib/ai/providers/openai';
 import { runAnthropic } from '@/lib/ai/providers/anthropic';
 import { runGemini } from '@/lib/ai/providers/gemini';
@@ -18,6 +18,9 @@ import {
 } from '@/lib/cache';
 import type { ProviderResult, SearchResponse } from '@/types/search';
 
+const SESSION_COOKIE = 'wai_session';
+const SESSION_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
+
 function getIpHash(req: NextRequest): string {
   const ip =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -26,6 +29,13 @@ function getIpHash(req: NextRequest): string {
   let h = 0;
   for (let i = 0; i < ip.length; i++) h = (Math.imul(31, h) + ip.charCodeAt(i)) | 0;
   return `ip_${Math.abs(h).toString(36)}`;
+}
+
+function getDeviceType(req: NextRequest): string {
+  const ua = req.headers.get('user-agent') ?? '';
+  if (/mobile/i.test(ua)) return 'mobile';
+  if (/tablet|ipad/i.test(ua)) return 'tablet';
+  return 'desktop';
 }
 
 export async function POST(req: NextRequest) {
@@ -50,6 +60,20 @@ export async function POST(req: NextRequest) {
   const { query } = parsed.data;
   const ipHash = getIpHash(req);
 
+  // ── Anonymous session ────────────────────────────────────────────────────────
+  const existingSession = req.cookies.get(SESSION_COOKIE)?.value;
+  const sessionId = existingSession ?? nanoid();
+  const isNewSession = !existingSession;
+
+  // Upsert session row fire-and-forget
+  upsertAnonSession(sessionId, isNewSession, {
+    deviceType: getDeviceType(req),
+    acquisitionChannel: req.nextUrl.searchParams.get('utm_source') ?? undefined,
+    acquisitionSource: req.nextUrl.searchParams.get('utm_source') ?? undefined,
+    acquisitionMedium: req.nextUrl.searchParams.get('utm_medium') ?? undefined,
+    acquisitionCampaign: req.nextUrl.searchParams.get('utm_campaign') ?? undefined,
+  }).catch(console.error);
+
   const rl = await checkRateLimit(ipHash);
   if (!rl.allowed) {
     return NextResponse.json(
@@ -58,14 +82,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── Cache lookup ────────────────────────────────────────────────────────────
+  // ── Cache lookup ─────────────────────────────────────────────────────────────
   const normalized = normalizeQuery(query);
   const queryHash = hashQuery(normalized);
 
-  // 1. Exact match
   const exactHit = await checkExactCache(queryHash);
   if (exactHit) {
-    return NextResponse.json({
+    const res = NextResponse.json({
       requestId,
       status: 'success',
       query,
@@ -74,14 +97,15 @@ export async function POST(req: NextRequest) {
       totalLatencyMs: Date.now() - start,
       cached: true,
     } satisfies SearchResponse & { cached: boolean });
+    if (isNewSession) res.cookies.set(SESSION_COOKIE, sessionId, { maxAge: SESSION_MAX_AGE, path: '/', httpOnly: true, sameSite: 'strict' });
+    return res;
   }
 
-  // 2. Semantic match
   const embedding = await generateEmbedding(normalized);
   if (embedding) {
     const semanticHit = await checkSemanticCache(embedding);
     if (semanticHit) {
-      return NextResponse.json({
+      const res = NextResponse.json({
         requestId,
         status: 'success',
         query,
@@ -90,9 +114,11 @@ export async function POST(req: NextRequest) {
         totalLatencyMs: Date.now() - start,
         cached: true,
       } satisfies SearchResponse & { cached: boolean });
+      if (isNewSession) res.cookies.set(SESSION_COOKIE, sessionId, { maxAge: SESSION_MAX_AGE, path: '/', httpOnly: true, sameSite: 'strict' });
+      return res;
     }
   }
-  // ── End cache lookup ────────────────────────────────────────────────────────
+  // ── End cache lookup ──────────────────────────────────────────────────────────
 
   const settled = await Promise.allSettled([
     runOpenAI(query),
@@ -116,13 +142,7 @@ export async function POST(req: NextRequest) {
 
   if (successful.length < 2) {
     return NextResponse.json(
-      {
-        requestId,
-        status: 'failure',
-        query,
-        error: 'Not enough providers responded. Please try again.',
-        providers,
-      },
+      { requestId, status: 'failure', query, error: 'Not enough providers responded. Please try again.', providers },
       { status: 503 }
     );
   }
@@ -130,9 +150,12 @@ export async function POST(req: NextRequest) {
   const compiled = await synthesizeResponses(query, providers);
   const totalLatencyMs = Date.now() - start;
 
-  // Persist to DB and save to cache (both fire-and-forget)
-  persistSearch(requestId, query, providers, compiled, totalLatencyMs, ipHash).catch(console.error);
+  // Persist + cache fire-and-forget
+  persistSearch(requestId, query, providers, compiled, totalLatencyMs, ipHash, sessionId).catch(console.error);
   saveToCache(normalized, queryHash, embedding, compiled, providers).catch(console.error);
+
+  // Tag fire-and-forget — never blocks response
+  tagAndUpdateSearch(requestId, query).catch(console.error);
 
   const response: SearchResponse = {
     requestId,
@@ -143,5 +166,7 @@ export async function POST(req: NextRequest) {
     totalLatencyMs,
   };
 
-  return NextResponse.json(response);
+  const res = NextResponse.json(response);
+  if (isNewSession) res.cookies.set(SESSION_COOKIE, sessionId, { maxAge: SESSION_MAX_AGE, path: '/', httpOnly: true, sameSite: 'strict' });
+  return res;
 }

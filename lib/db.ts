@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { ProviderResult, CompiledResult } from '@/types/search';
+import { tagQuestion } from '@/lib/ai/tag-question';
 
 function getClient() {
   const url = process.env.SUPABASE_URL;
@@ -8,16 +9,51 @@ function getClient() {
   return createClient(url, key);
 }
 
+// ── Upsert anonymous session ────────────────────────────────────────────────
+export async function upsertAnonSession(
+  sessionId: string,
+  isNew: boolean,
+  meta: {
+    deviceType?: string;
+    acquisitionChannel?: string;
+    acquisitionSource?: string;
+    acquisitionMedium?: string;
+    acquisitionCampaign?: string;
+  }
+) {
+  const supabase = getClient();
+  if (!supabase) return;
+
+  if (isNew) {
+    await supabase.from('anonymous_sessions').insert({
+      id: sessionId,
+      device_type: meta.deviceType,
+      acquisition_channel: meta.acquisitionChannel,
+      acquisition_source: meta.acquisitionSource,
+      acquisition_medium: meta.acquisitionMedium,
+      acquisition_campaign: meta.acquisitionCampaign,
+    });
+  } else {
+    // Update last_seen and increment session count on new day visits
+    await supabase
+      .from('anonymous_sessions')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', sessionId);
+  }
+}
+
+// ── Persist search ───────────────────────────────────────────────────────────
 export async function persistSearch(
   requestId: string,
   query: string,
   providers: ProviderResult[],
   compiled: CompiledResult,
   totalLatencyMs: number,
-  ipHash: string
+  ipHash: string,
+  sessionId?: string
 ) {
   const supabase = getClient();
-  if (!supabase) return; // silently skip if Supabase not configured
+  if (!supabase) return;
 
   const successful = providers.filter((p) => p.status === 'success').length;
   const failed = providers.filter((p) => p.status !== 'success').length;
@@ -26,11 +62,14 @@ export async function persistSearch(
     await supabase.from('search_requests').insert({
       id: requestId,
       query_text: query,
+      query_normalized: query.toLowerCase().trim(),
       ip_hash: ipHash,
+      anonymous_session_id: sessionId ?? null,
       status: failed === 0 ? 'success' : successful > 0 ? 'partial_failure' : 'failure',
       total_latency_ms: totalLatencyMs,
       success_provider_count: successful,
       failed_provider_count: failed,
+      provider_success_count: successful,
     });
 
     await supabase.from('provider_results').insert(
@@ -53,7 +92,36 @@ export async function persistSearch(
       notes: compiled.notes,
       synthesis_model: compiled.synthesisModel,
     });
+
+    // Increment question count on session
+    if (sessionId) {
+      await supabase.rpc('increment_session_question_count', { session_id: sessionId });
+    }
   } catch (err) {
     console.error('Supabase persist error:', err);
+  }
+}
+
+// ── Tag and write back ───────────────────────────────────────────────────────
+// Fires after the response is sent. Never blocks the user.
+export async function tagAndUpdateSearch(requestId: string, query: string) {
+  const supabase = getClient();
+  if (!supabase) return;
+
+  try {
+    const tags = await tagQuestion(query);
+
+    await supabase
+      .from('search_requests')
+      .update({
+        topic_tags: tags.topic_tags,
+        primary_topic: tags.primary_topic,
+        life_stage: tags.life_stage,
+        category: tags.category,
+        sentiment: tags.sentiment,
+      })
+      .eq('id', requestId);
+  } catch (err) {
+    console.error('Tag update error:', err);
   }
 }
