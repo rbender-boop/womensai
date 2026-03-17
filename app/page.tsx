@@ -542,11 +542,11 @@ export default function HomePage() {
                   }}>
                     Sign up free — the more you ask,
                     <br />
-                    <em style={{ color: '#9B4163', fontStyle: 'italic' }}>the smarter your answers get.</em>
+                    <em style={{ color: '#9B4163', fontStyle: 'italic' }}>the smarter and more personalized your answers get.</em>
                   </h2>
                   <p className="text-sm mb-8 mx-auto" style={{ color: '#7A6E67', maxWidth: '380px', lineHeight: 1.75 }}>
-                    Your questions build context. Every answer gets sharper.
-                    <br />No credit card. No commitment.
+                    Your questions build context. Every answer gets sharper and more personalized.
+                    <br />Your questions always remain anonymous. No credit card. No commitment.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center" style={{ maxWidth: '420px', margin: '0 auto' }}>
                     <input
