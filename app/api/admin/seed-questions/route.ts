@@ -80,12 +80,17 @@ export async function POST(req: NextRequest) {
 
   const supabase = getSupabase();
 
-  // Fetch all unseeded questions
+  // Accept optional limit — default 10 per call to stay under Vercel timeout
+  const body = await req.json().catch(() => ({}));
+  const limit = Math.min(Number(body?.limit) || 10, 20);
+
+  // Fetch unseeded questions up to limit
   const { data: questions, error } = await supabase
     .from('curated_questions')
     .select('id, question')
     .is('search_request_id', null)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .limit(limit);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
