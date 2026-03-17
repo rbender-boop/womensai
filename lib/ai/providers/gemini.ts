@@ -3,7 +3,7 @@ import { PROVIDER_PROMPT_TEMPLATE } from '@/lib/ai/prompts';
 import { PROVIDER_TIMEOUT_MS, PROVIDER_MAX_TOKENS } from '@/lib/ai/types';
 import type { ProviderResult } from '@/types/search';
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite';
 const ENABLED = process.env.ENABLE_GEMINI !== 'false';
 
 // Lower safety thresholds so women's health content isn't blocked
