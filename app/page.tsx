@@ -23,7 +23,7 @@ const EXAMPLES = [
 const DIFF_CARDS = [
   {
     icon: Sparkles,
-    label: 'We ask four AIs, so you don\'t have to',
+    label: "We ask four AIs, so you don't have to",
     desc: "One question. Four AI perspectives. Simultaneously. You get the combined intelligence of ChatGPT, Gemini, Claude, and Grok — without opening a single extra tab.",
     delay: '0s',
   },
@@ -175,7 +175,6 @@ export default function HomePage() {
         <nav className="hidden sm:flex items-center gap-7 text-sm text-warm-gray">
           <a href="#how-it-works" className="hover:text-warm-black transition-colors">How it works</a>
           <a href="/about" className="hover:text-warm-black transition-colors">About</a>
-          <a href="/pricing" className="hover:text-warm-black transition-colors">Pricing</a>
           {!stripDone && (
             <button
               onClick={() => setForceModal(true)}
