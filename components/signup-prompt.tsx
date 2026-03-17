@@ -31,7 +31,6 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
       });
       if (res.ok) {
         setDone(true);
-        // Mark signed up in localStorage so we stop showing prompts
         localStorage.setItem('wai_signed_up', '1');
         setTimeout(() => onSignedUp(), 1800);
       } else {
@@ -44,7 +43,7 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
     }
   }
 
-  // ── BANNER (soft, non-blocking, shown after question 3) ──
+  // ── BANNER ──
   if (variant === 'banner') {
     return (
       <div
@@ -57,7 +56,7 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
         >
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-warm-black leading-snug">
-              Sign up free — get answers personalized to your health history, not just your last question.
+              Sign up free — the more you ask, the smarter your answers get.
             </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
@@ -76,7 +75,7 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
               className="text-sm font-medium px-4 py-2 rounded-xl shrink-0 transition-opacity disabled:opacity-60"
               style={{ background: '#9B4163', color: '#fff' }}
             >
-              {done ? '✓ Done' : loading ? '...' : 'Sign up'}
+              {done ? '\u2713 Done' : loading ? '...' : 'Sign up'}
             </button>
             <button onClick={onDismiss} className="text-warm-muted hover:text-warm-black transition-colors shrink-0">
               <X size={15} />
@@ -88,7 +87,7 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
     );
   }
 
-  // ── MODAL (shown on limit hit or return visit) ──
+  // ── MODAL ──
   const isReturn = variant === 'return';
 
   return (
@@ -116,21 +115,19 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
 
         {done ? (
           <div className="text-center py-4">
-            <p className="text-2xl mb-2">✓</p>
+            <p className="text-2xl mb-2">\u2713</p>
             <p className="font-semibold text-warm-black">You&apos;re in.</p>
-            <p className="text-sm text-warm-gray mt-1">Your answers will get more personalized with every question.</p>
+            <p className="text-sm text-warm-gray mt-1">The more you ask, the smarter your answers get.</p>
           </div>
         ) : (
           <>
             <h2 className="font-serif text-2xl font-bold text-warm-black mb-2 leading-snug">
-              {isReturn
-                ? 'Welcome back.'
-                : "You've used today's free questions."}
+              {isReturn ? 'Welcome back.' : "You've used today's free questions."}
             </h2>
             <p className="text-sm text-warm-gray leading-relaxed mb-6">
               {isReturn
-                ? "You've been asking great questions. Sign up free — get answers personalized to your health history, not just your last question."
-                : 'Sign up free — get answers personalized to your health history, not just your last question. Your daily questions reset every 24 hours.'}
+                ? "You've been asking great questions. Sign up free — the more you ask, the smarter your answers get."
+                : "Sign up free — the more you ask, the smarter your answers get. Your daily questions reset every 24 hours."}
             </p>
 
             <div className="flex flex-col gap-3">
@@ -140,7 +137,7 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                className="w-full text-sm px-4 py-3 rounded-xl border border-warm-border bg-cream focus:outline-none text-warm-black placeholder-warm-muted focus:border-pink-300"
+                className="w-full text-sm px-4 py-3 rounded-xl border border-warm-border bg-cream focus:outline-none text-warm-black placeholder-warm-muted"
                 style={{ outline: 'none' }}
               />
               {error && <p className="text-xs" style={{ color: '#C0394F' }}>{error}</p>}
@@ -156,7 +153,7 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
                 onClick={onDismiss}
                 className="text-xs text-warm-muted hover:text-warm-black transition-colors text-center py-1"
               >
-                {isReturn ? 'Maybe later' : 'I\'ll wait until tomorrow'}
+                {isReturn ? 'Maybe later' : "I'll wait until tomorrow"}
               </button>
             </div>
           </>

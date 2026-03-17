@@ -42,7 +42,7 @@ const DIFF_CARDS = [
   {
     icon: Brain,
     label: 'Your answers get smarter over time',
-    desc: 'Sign up free and your history shapes every future answer. The more you ask, the more personalized your results become — not just your last question.',
+    desc: 'Sign up free and every question you ask builds sharper context. The more you ask, the better your answers get.',
     delay: '3s',
   },
 ];
@@ -194,7 +194,7 @@ export default function HomePage() {
             style={{ background: '#F7ECF0', borderColor: '#E8C4D0', color: '#9B4163' }}
           >
             <Sparkles size={11} />
-            ChatGPT · Gemini · Claude · Grok — one compiled answer
+            ChatGPT \u00b7 Gemini \u00b7 Claude \u00b7 Grok \u2014 one compiled answer
           </div>
 
           <h1
@@ -212,7 +212,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-lg text-warm-gray max-w-lg mx-auto mb-6 leading-relaxed">
-            Stop trusting one AI with your health. AskWomensAI asks ChatGPT, Gemini, Claude, and Grok simultaneously — then compiles one clear answer, shows where they agree, and flags where they don&apos;t.
+            Stop trusting one AI with your health. AskWomensAI asks ChatGPT, Gemini, Claude, and Grok simultaneously \u2014 then compiles one clear answer, shows where they agree, and flags where they don&apos;t.
           </p>
 
           <p className="font-medium font-serif italic mb-8" style={{ color: '#9B4163', fontSize: '18px', animation: 'breath 3s ease-in-out infinite' }}>
@@ -222,7 +222,7 @@ export default function HomePage() {
           <div className="w-full bg-white rounded-2xl transition-all" style={{ border: '1.5px solid #EDE8E3', boxShadow: '0 2px 12px rgba(155, 65, 99, 0.06)' }}>
             <textarea
               className="w-full px-5 pt-4 pb-2 text-base placeholder-warm-muted bg-transparent resize-none focus:outline-none rounded-t-2xl leading-relaxed text-warm-black"
-              placeholder="Ask a health question you want multiple AI perspectives on…"
+              placeholder="Ask a health question you want multiple AI perspectives on\u2026"
               rows={3}
               value={query}
               onChange={(e) => { setQuery(e.target.value); setError(''); }}
@@ -260,7 +260,7 @@ export default function HomePage() {
           </div>
 
           <p className="mt-5 text-xs text-warm-muted">
-            5 free questions per day · No account required · Always consult a healthcare provider
+            5 free questions per day \u00b7 No account required \u00b7 Always consult a healthcare provider
           </p>
         </section>
 
@@ -270,7 +270,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
               { icon: Search, title: '1. Ask once', desc: 'Type your health question one time. No need to open four browser tabs or wonder which AI to trust.' },
-              { icon: Sparkles, title: '2. All four AIs answer', desc: 'ChatGPT, Gemini, Claude, and Grok all respond in parallel — usually in under 30 seconds.' },
+              { icon: Sparkles, title: '2. All four AIs answer', desc: 'ChatGPT, Gemini, Claude, and Grok all respond in parallel \u2014 usually in under 30 seconds.' },
               { icon: CheckCheck, title: '3. Get a compiled answer', desc: 'See what they agree on, where they differ, and a synthesized best answer to guide your next step.' },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex flex-col gap-3 bg-white rounded-2xl p-6 border border-warm-border">
@@ -308,17 +308,17 @@ export default function HomePage() {
             <div className="rounded-3xl px-8 py-10 text-center" style={{ background: '#F7ECF0', border: '1.5px solid #E8C4D0' }}>
               {stripDone ? (
                 <>
-                  <p className="text-2xl mb-2">✓</p>
+                  <p className="text-2xl mb-2">\u2713</p>
                   <p className="font-serif text-xl font-bold text-warm-black">You&apos;re in.</p>
-                  <p className="text-sm text-warm-gray mt-2">Check your inbox — your answers just got personal.</p>
+                  <p className="text-sm text-warm-gray mt-2">The more you ask, the smarter your answers get.</p>
                 </>
               ) : (
                 <>
                   <h2 className="font-serif text-2xl font-bold mb-3" style={{ color: '#1C1714' }}>
-                    Sign up free — get answers personalized to your health history, not just your last question.
+                    Sign up free \u2014 the more you ask, the smarter your answers get.
                   </h2>
                   <p className="text-sm text-warm-gray mb-7 max-w-md mx-auto leading-relaxed">
-                    The more you ask, the more personalized your answers become. No credit card. No commitment.
+                    Your questions build context. Every answer gets sharper. No credit card. No commitment.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
                     <input
@@ -354,7 +354,7 @@ export default function HomePage() {
           <div className="flex items-center gap-0.5">
             <span className="font-serif font-bold text-warm-black">AskWomens</span>
             <span className="font-serif font-bold" style={{ color: '#9B4163' }}>AI</span>
-            <span className="ml-2 text-warm-muted text-xs">© 2025</span>
+            <span className="ml-2 text-warm-muted text-xs">\u00a9 2025</span>
           </div>
           <div className="flex items-center gap-5">
             <a href="/privacy" className="hover:text-warm-black transition-colors text-xs">Privacy</a>
