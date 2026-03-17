@@ -1,3 +1,5 @@
+export const maxDuration = 300; // Vercel Pro: up to 300s
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { nanoid } from 'nanoid';
@@ -16,8 +18,8 @@ import {
 } from '@/lib/cache';
 import type { ProviderResult } from '@/types/search';
 
-const BATCH_SIZE = 5;
-const BATCH_DELAY_MS = 2000;
+const BATCH_SIZE = 1;
+const BATCH_DELAY_MS = 500;
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL;
