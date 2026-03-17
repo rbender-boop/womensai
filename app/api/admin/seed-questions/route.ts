@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   const { data: questions, error } = await supabase
     .from('curated_questions')
     .select('id, question')
-    .is('search_request_id', null)
+    .is('seeded_at', null)
     .order('created_at', { ascending: true })
     .limit(limit);
 
@@ -117,10 +117,9 @@ export async function POST(req: NextRequest) {
         try {
           const result = await seedQuestion(q.question);
           if (result) {
-            const idToStore = result.startsWith('cached:') ? result.replace('cached:', '') : result;
             await supabase
               .from('curated_questions')
-              .update({ search_request_id: idToStore })
+              .update({ seeded_at: new Date().toISOString() })
               .eq('id', q.id);
             seeded++;
           } else {
@@ -141,7 +140,7 @@ export async function POST(req: NextRequest) {
   const { count: remaining } = await supabase
     .from('curated_questions')
     .select('id', { count: 'exact', head: true })
-    .is('search_request_id', null);
+    .is('seeded_at', null);
 
   return NextResponse.json({
     seeded,
