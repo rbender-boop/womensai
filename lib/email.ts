@@ -35,11 +35,14 @@ export async function sendWelcomeEmail(to: string) {
               <!-- Body -->
               <tr>
                 <td style="padding:36px 36px 28px;">
-                  <p style="margin:0 0 16px;font-size:22px;font-weight:bold;color:#1C1714;line-height:1.3;">
+                  <p style="margin:0 0 4px;font-size:22px;font-weight:bold;color:#1C1714;line-height:1.3;">
                     You're in.
                   </p>
+                  <p style="margin:0 0 20px;font-size:15px;color:#9B4163;font-style:italic;line-height:1.3;">
+                    Your profile is anonymous.
+                  </p>
                   <p style="margin:0 0 20px;font-size:15px;color:#5C524D;line-height:1.7;">
-                    Every question you ask from here makes your answers more personalized to you — not just based on your last question, but your full health history.
+                    The more you ask, the smarter and more personalized your answers get — and your questions always remain anonymous.
                   </p>
                   <p style="margin:0 0 28px;font-size:15px;color:#5C524D;line-height:1.7;">
                     Keep asking. The more context we have, the better your answers get.
@@ -94,7 +97,7 @@ export async function sendWelcomeEmail(to: string) {
       body: JSON.stringify({
         from: FROM,
         to: [to],
-        subject: "You're in — your answers just got personal",
+        subject: "You're in — your profile is anonymous",
         html,
       }),
     });
