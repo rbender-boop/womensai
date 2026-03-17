@@ -86,6 +86,11 @@ export default function HomePage() {
   const [stripDone, setStripDone] = useState(false);
   const [stripError, setStripError] = useState('');
 
+  // Follow-up question states
+  const [followupState, setFollowupState] = useState<'idle' | 'loading' | 'ready'>('idle');
+  const [followupQuestions, setFollowupQuestions] = useState<string[]>([]);
+  const [followupAnswers, setFollowupAnswers] = useState<string[]>([]);
+
   const { variant, dismiss, onSignedUp } = useSignupTrigger(questionJustAsked);
 
   useEffect(() => {
@@ -93,15 +98,64 @@ export default function HomePage() {
     setShowInlineSignup(!isSignedUp());
   }, []);
 
-  function handleSubmit(q: string) {
+  function navigate(enrichedQuery: string, displayQuery: string) {
+    recordQuestion();
+    setQuestionJustAsked(true);
+    setTimeout(() => setQuestionJustAsked(false), 500);
+    const q = encodeURIComponent(enrichedQuery);
+    const dq = enrichedQuery !== displayQuery ? `&dq=${encodeURIComponent(displayQuery)}` : '';
+    router.push(`/results/new?q=${q}${dq}`);
+  }
+
+  async function handleSubmit(q: string) {
     const trimmed = q.trim();
     if (trimmed.length < 8) { setError('Please enter at least 8 characters.'); return; }
     if (trimmed.length > 1500) { setError('Please keep your question under 1,500 characters.'); return; }
     setError('');
-    recordQuestion();
-    setQuestionJustAsked(true);
-    setTimeout(() => setQuestionJustAsked(false), 500);
-    router.push(`/results/new?q=${encodeURIComponent(trimmed)}`);
+    setFollowupState('loading');
+    setFollowupQuestions([]);
+    setFollowupAnswers([]);
+
+    try {
+      const res = await fetch('/api/followup-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: trimmed }),
+      });
+      const data = await res.json();
+      if (Array.isArray(data.questions) && data.questions.length > 0) {
+        setFollowupQuestions(data.questions);
+        setFollowupAnswers(new Array(data.questions.length).fill(''));
+        setFollowupState('ready');
+      } else {
+        // No questions returned — go straight to results
+        setFollowupState('idle');
+        navigate(trimmed, trimmed);
+      }
+    } catch {
+      // On any error, skip follow-ups
+      setFollowupState('idle');
+      navigate(trimmed, trimmed);
+    }
+  }
+
+  function handleFinalSubmit(skip = false) {
+    const trimmed = query.trim();
+    if (!skip && followupAnswers.some(a => a.trim())) {
+      const contextParts = followupQuestions
+        .map((fq, i) => {
+          const ans = followupAnswers[i]?.trim();
+          return ans ? `${fq} ${ans}` : null;
+        })
+        .filter(Boolean) as string[];
+      const enriched = contextParts.length > 0
+        ? `${trimmed}. Additional context: ${contextParts.join('. ')}`
+        : trimmed;
+      navigate(enriched, trimmed);
+    } else {
+      navigate(trimmed, trimmed);
+    }
+    setFollowupState('idle');
   }
 
   async function handleStripSignup() {
@@ -147,12 +201,16 @@ export default function HomePage() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
         .hero-1 { animation: floatIn 0.8s ease both; }
         .hero-2 { animation: floatIn 0.8s ease 0.12s both; }
         .hero-3 { animation: floatIn 0.8s ease 0.24s both; }
         .hero-4 { animation: floatIn 0.8s ease 0.36s both; }
         .pill-ex { transition: all 0.18s ease; }
         .pill-ex:hover { background: rgba(139,48,88,0.07) !important; border-color: #DCA8C0 !important; color: #8B3058 !important; }
+        .followup-in { animation: floatIn 0.35s ease both; }
       `}</style>
 
       {activeVariant && (
@@ -261,14 +319,14 @@ export default function HomePage() {
                 placeholder="Ask a health, fitness, wellness, or beauty question…"
                 rows={3}
                 value={query}
-                onChange={(e) => { setQuery(e.target.value); setError(''); }}
+                onChange={(e) => { setQuery(e.target.value); setError(''); setFollowupState('idle'); }}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(query); } }}
               />
               <div className="flex items-center justify-between px-5 pb-5 pt-1">
                 <span className="text-xs" style={{ color: '#AFA8A2' }}>{query.length} / 1500</span>
                 <button
                   onClick={() => handleSubmit(query)}
-                  disabled={query.trim().length < 8}
+                  disabled={query.trim().length < 8 || followupState === 'loading'}
                   className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{
                     background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)',
@@ -288,11 +346,87 @@ export default function HomePage() {
 
             {error && <p className="mt-2 text-sm" style={{ color: '#C0394F' }}>{error}</p>}
 
+            {/* Follow-up Questions Panel */}
+            {followupState !== 'idle' && (
+              <div
+                className="followup-in mt-3"
+                style={{
+                  background: 'rgba(255,255,255,0.92)',
+                  border: '1.5px solid rgba(212,167,185,0.5)',
+                  borderRadius: '20px',
+                  padding: '20px 22px',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                {followupState === 'loading' ? (
+                  <div className="flex items-center gap-3">
+                    <div style={{
+                      width: '15px', height: '15px', borderRadius: '50%',
+                      border: '2px solid #9B4163', borderTopColor: 'transparent',
+                      animation: 'spin 0.7s linear infinite', flexShrink: 0,
+                    }} />
+                    <p className="text-sm" style={{ color: '#7A6E67' }}>Personalizing your questions…</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold uppercase mb-4" style={{ color: '#9B4163', letterSpacing: '2.5px' }}>
+                      Help us tailor your answer
+                    </p>
+                    <div className="space-y-3">
+                      {followupQuestions.map((fq, i) => (
+                        <div key={i}>
+                          <label className="block text-sm mb-1.5" style={{ color: '#4A4540' }}>{fq}</label>
+                          <input
+                            type="text"
+                            value={followupAnswers[i] || ''}
+                            onChange={e => {
+                              const next = [...followupAnswers];
+                              next[i] = e.target.value;
+                              setFollowupAnswers(next);
+                            }}
+                            onKeyDown={e => { if (e.key === 'Enter') handleFinalSubmit(); }}
+                            placeholder="Optional — leave blank to skip"
+                            className="w-full text-sm px-4 py-2.5 focus:outline-none"
+                            style={{
+                              background: 'rgba(253,245,248,0.8)',
+                              border: '1px solid rgba(212,167,185,0.4)',
+                              borderRadius: '12px',
+                              color: '#1C1714',
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-4 mt-5">
+                      <button
+                        onClick={() => handleFinalSubmit()}
+                        className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full"
+                        style={{
+                          background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)',
+                          color: '#fff',
+                          boxShadow: '0 4px 18px rgba(139,48,88,0.28)',
+                        }}
+                      >
+                        Get my answer →
+                      </button>
+                      <button
+                        onClick={() => handleFinalSubmit(true)}
+                        className="text-sm"
+                        style={{ color: '#AFA8A2' }}
+                      >
+                        Skip
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="mt-5 flex flex-wrap gap-2 justify-center">
               {EXAMPLES.map((ex) => (
                 <button
                   key={ex}
-                  onClick={() => { setQuery(ex); setError(''); }}
+                  onClick={() => { setQuery(ex); setError(''); setFollowupState('idle'); }}
                   className="pill-ex text-xs px-4 py-2 rounded-full text-left"
                   style={{
                     background: 'rgba(255,255,255,0.7)',

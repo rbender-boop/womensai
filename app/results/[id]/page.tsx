@@ -122,7 +122,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 export default function ResultsPage() {
   const params = useSearchParams();
   const router = useRouter();
+
+  // q = full enriched query sent to the API
+  // dq = original display query shown to the user (present when follow-up context was added)
   const query = params.get('q') || '';
+  const displayQuery = params.get('dq')
+    ? decodeURIComponent(params.get('dq')!)
+    : query ? decodeURIComponent(query) : '';
 
   // Core
   const [data, setData] = useState<SearchResponse | null>(null);
@@ -191,7 +197,6 @@ export default function ResultsPage() {
   const compiled = data?.compiled;
   const providers = data?.providers || [];
   const activeProvider = providers.find((p) => p.provider === activeTab);
-  const decodedQuery = query ? decodeURIComponent(query) : '';
 
   // ── Share / email helpers ────────────────────────────────────────────────────
   async function getShareUrl(): Promise<string> {
@@ -201,7 +206,7 @@ export default function ResultsPage() {
       const res = await fetch('/api/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: decodedQuery, compiled, providers, requestId }),
+        body: JSON.stringify({ query: displayQuery, compiled, providers, requestId }),
       });
       const json = await res.json();
       if (json.slug) {
@@ -236,7 +241,7 @@ export default function ResultsPage() {
       const res = await fetch('/api/email-result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to, query: decodedQuery, compiled, shareUrl, type, note: emailNote }),
+        body: JSON.stringify({ to, query: displayQuery, compiled, shareUrl, type, note: emailNote }),
       });
       setEmailStatus(res.ok ? 'sent' : 'error');
     } catch {
@@ -246,13 +251,13 @@ export default function ResultsPage() {
 
   function handleFollowUp() {
     if (!followUpText.trim()) return;
-    const ctx = `Follow-up to "${decodedQuery}": ${followUpText.trim()}`;
+    const ctx = `Follow-up to "${displayQuery}": ${followUpText.trim()}`;
     router.push(`/results/new?q=${encodeURIComponent(ctx)}`);
   }
 
   async function handleSocialShare(platform: string) {
     const url = await getShareUrl();
-    const text = `I asked ChatGPT, Gemini, Claude & Grok: "${decodedQuery.slice(0, 80)}" — here's what they said:`;
+    const text = `I asked ChatGPT, Gemini, Claude & Grok: "${displayQuery.slice(0, 80)}" — here's what they said:`;
     const eu = encodeURIComponent(url);
     const et = encodeURIComponent(text);
     const links: Record<string, string> = {
@@ -321,11 +326,11 @@ export default function ResultsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-4">
-        {/* Question */}
-        {query && (
+        {/* Question — shows clean display query, not enriched context */}
+        {displayQuery && (
           <div className="bg-white rounded-2xl px-5 py-4" style={{ border: '1px solid #EDE8E3' }}>
             <p className="text-xs text-warm-muted mb-1.5 font-medium uppercase tracking-widest">Your question</p>
-            <p className="text-base text-warm-black font-medium leading-relaxed">{decodedQuery}</p>
+            <p className="text-base text-warm-black font-medium leading-relaxed">{displayQuery}</p>
           </div>
         )}
 
@@ -520,7 +525,7 @@ export default function ResultsPage() {
       {activeModal === 'followup' && (
         <Modal title="Ask a follow-up" onClose={() => setActiveModal(null)}>
           <p className="text-xs text-warm-muted mb-3">
-            Original: <em className="text-warm-gray">{decodedQuery.slice(0, 90)}{decodedQuery.length > 90 ? '…' : ''}</em>
+            Original: <em className="text-warm-gray">{displayQuery.slice(0, 90)}{displayQuery.length > 90 ? '…' : ''}</em>
           </p>
           <textarea
             rows={3} value={followUpText} onChange={(e) => setFollowUpText(e.target.value)}
