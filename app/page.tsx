@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Sparkles, CheckCheck, GitFork, Brain } from 'lucide-react';
+import { Search, Sparkles, CheckCheck, GitFork, Brain, Heart } from 'lucide-react';
 import { SignupPrompt } from '@/components/signup-prompt';
 import {
   recordSession,
@@ -22,9 +22,9 @@ const EXAMPLES = [
 
 const DIFF_CARDS = [
   {
-    icon: Sparkles,
-    label: "We ask four AIs, so you don't have to",
-    desc: "One question. Four AI perspectives. Simultaneously. You get the combined intelligence of ChatGPT, Gemini, Claude, and Grok — without opening a single extra tab.",
+    icon: Heart,
+    label: "Built for women. Not just adapted for them.",
+    desc: "Most AI health tools are built for everyone — which means they're optimized for no one. AskWomensAI is purpose-built for women's health, a space where AI datasets have historically been incomplete and where getting a second opinion isn't paranoia — it's smart.",
     delay: '0s',
   },
   {
