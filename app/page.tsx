@@ -173,6 +173,7 @@ export default function HomePage() {
           <span className="font-serif text-xl font-bold tracking-tight" style={{ color: '#9B4163' }}>AI</span>
         </div>
         <nav className="hidden sm:flex items-center gap-7 text-sm text-warm-gray">
+          <a href="#why-different" className="hover:text-warm-black transition-colors">Why us</a>
           <a href="#how-it-works" className="hover:text-warm-black transition-colors">How it works</a>
           <a href="/about" className="hover:text-warm-black transition-colors">About</a>
           {!stripDone && (
@@ -266,7 +267,25 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* How it works */}
+        {/* Why we're different — now FIRST */}
+        <section id="why-different" className="w-full max-w-4xl mx-auto py-14 border-t border-warm-border">
+          <div className="text-center mb-3">
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#9B4163' }}>One AI isn&apos;t enough</span>
+          </div>
+          <h2 className="font-serif text-4xl font-bold text-warm-black text-center mb-3">
+            Why we&apos;re different.
+          </h2>
+          <p className="text-center text-warm-gray text-sm max-w-lg mx-auto mb-10 leading-relaxed">
+            Every other health AI tool gives you one model&apos;s answer and calls it done. We built something fundamentally different.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {DIFF_CARDS.map((card) => (
+              <LiftCard key={card.label} {...card} />
+            ))}
+          </div>
+        </section>
+
+        {/* How it works — now SECOND */}
         <section id="how-it-works" className="w-full max-w-4xl mx-auto py-16 border-t border-warm-border">
           <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">How AskWomensAI works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -282,24 +301,6 @@ export default function HomePage() {
                 <h3 className="font-semibold text-warm-black text-sm">{title}</h3>
                 <p className="text-sm text-warm-gray leading-relaxed">{desc}</p>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Why we're different */}
-        <section className="w-full max-w-4xl mx-auto py-14 border-t border-warm-border">
-          <div className="text-center mb-3">
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#9B4163' }}>One AI isn&apos;t enough</span>
-          </div>
-          <h2 className="font-serif text-4xl font-bold text-warm-black text-center mb-3">
-            Why we&apos;re different.
-          </h2>
-          <p className="text-center text-warm-gray text-sm max-w-lg mx-auto mb-10 leading-relaxed">
-            Every other health AI tool gives you one model&apos;s answer and calls it done. We built something fundamentally different.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {DIFF_CARDS.map((card) => (
-              <LiftCard key={card.label} {...card} />
             ))}
           </div>
         </section>
