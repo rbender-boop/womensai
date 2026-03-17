@@ -78,7 +78,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = getSupabase();
+  let supabase: ReturnType<typeof getSupabase>;
+  try {
+    supabase = getSupabase();
+  } catch (e) {
+    return NextResponse.json({ error: `Supabase init failed: ${String(e)}` }, { status: 500 });
+  }
 
   // Accept optional limit — default 10 per call to stay under Vercel timeout
   const body = await req.json().catch(() => ({}));
