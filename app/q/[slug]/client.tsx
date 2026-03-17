@@ -197,6 +197,11 @@ export default function QuestionPageClient({ question, teaser }: Props) {
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#8B3058', fontStyle: 'italic' }}>AI</span>
             <span className="ml-2 text-xs" style={{ color: '#AFA8A2' }}>© 2025</span>
           </div>
+          <div className="flex items-center gap-5">
+            <a href="/questions" style={{ fontSize: '12px', color: '#7A6E67' }}>Questions</a>
+            <a href="/weird" style={{ fontSize: '12px', color: '#7A6E67' }}>Weird Questions</a>
+            <a href="/privacy" style={{ fontSize: '12px', color: '#7A6E67' }}>Privacy</a>
+          </div>
           <p className="text-xs" style={{ color: '#AFA8A2' }}>For research only. Always consult a qualified healthcare provider.</p>
         </div>
       </footer>

@@ -595,6 +595,8 @@ export default function HomePage() {
             <span className="ml-2 text-xs" style={{ color: '#AFA8A2' }}>© 2025</span>
           </div>
           <div className="flex items-center gap-6">
+            <a href="/questions" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Questions</a>
+            <a href="/weird" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Weird Questions</a>
             <a href="/privacy" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Privacy</a>
             <a href="/terms" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Terms</a>
             <a href="/about" style={{ fontSize: '12px', transition: 'color 0.15s' }}>About</a>

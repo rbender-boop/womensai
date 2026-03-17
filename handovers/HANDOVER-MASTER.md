@@ -1,5 +1,5 @@
 # AskWomensAI — Master Handover
-**Last Updated:** March 17, 2026
+**Last Updated:** March 17, 2026 — Session D complete
 **Repo:** github.com/rbender-boop/womensai
 **Live site:** https://www.askwomensai.com
 **Hosting:** Vercel (auto-deploys on push to main)
@@ -120,31 +120,34 @@ Write-Host "All done!"
 
 ---
 
-## Session D — Next To Build
+## Session D — COMPLETED (March 17, 2026)
 
-### 1. `app/questions/page.tsx` — Questions Index Page
-- Category filter tabs/pills (12 categories)
-- Age group filter chips
-- All 549 questions as clickable cards → `/q/[slug]`
-- SSG from DB at build time
-- Matches site design (glassmorphism cards, rose palette)
+### ✅ `app/questions/page.tsx` + `app/questions/client.tsx`
+- Server component fetches all non-weird questions at build time (`revalidate = 86400`)
+- Client component: category filter (12 categories) + age group chips
+- 3-col responsive grid of glassmorphism cards → `/q/[slug]`
+- Full SEO metadata + canonical URL
+- **Not in main nav** — footer-linked only (hidden from casual users, indexable by Google)
 
-### 2. `app/weird/page.tsx` — Weird Questions Page
-- 50 questions where `is_weird = true`
-- Playful, punchy vibe — different from main Questions page
-- Large question text, minimal chrome
-- One-tap share buttons: Twitter/X + WhatsApp, pre-filled with question + URL
-- Same answer-gate mechanic as `/q/[slug]`
+### ✅ `app/weird/page.tsx` + `app/weird/client.tsx`
+- Server component fetches `is_weird = true` questions
+- Playful large-text list layout with Playfair headings
+- Twitter/X + WhatsApp share buttons on every card, pre-filled with question + URL
+- Full SEO metadata + canonical URL
+- **Not in main nav** — footer-linked only
 
-### 3. Nav Updates (inline in `app/page.tsx` header + all other page headers)
-- Add "Questions" → `/questions`
-- Add "Weird" → `/weird`
+### ✅ `app/sitemap.ts`
+- All 549 `/q/[slug]` URLs (priority 0.7, monthly)
+- `/questions` (priority 0.8), `/weird` (priority 0.7)
+- Static pages: `/`, `/about`, `/privacy`, `/terms`
+- Accessible at `/sitemap.xml` after deploy
 
-### 4. `app/sitemap.ts` — Sitemap
-- All `/q/[slug]` URLs (549)
-- `/questions`
-- `/weird`
-- Existing pages: `/`, `/about`, `/privacy`, `/terms`
+### ✅ Footer updates
+- `app/page.tsx` footer: added Questions + Weird Questions links
+- `app/q/[slug]/client.tsx` footer: added Questions + Weird Questions links (internal linking for SEO)
+
+### Post-deploy action required
+- Submit `https://www.askwomensai.com/sitemap.xml` to Google Search Console
 
 ---
 
@@ -194,9 +197,13 @@ app/
   q/[slug]/
     page.tsx                        ← SSG SEO page (server component)
     client.tsx                      ← Client UI for question pages
-  questions/page.tsx                ← [SESSION D] Questions index
-  weird/page.tsx                    ← [SESSION D] Weird questions page
-  sitemap.ts                        ← [SESSION D] Full sitemap
+  questions/
+    page.tsx                        ← SSG server component, fetches non-weird questions
+    client.tsx                      ← Category + age filters, 3-col card grid
+  weird/
+    page.tsx                        ← SSG server component, fetches is_weird=true
+    client.tsx                      ← Large text list, Twitter/X + WhatsApp share buttons
+  sitemap.ts                        ← 549 /q/[slug] + static pages → /sitemap.xml
   api/
     search/route.ts                 ← Main search orchestration
     questions/route.ts              ← GET filterable questions
@@ -292,11 +299,12 @@ ADMIN_SECRET
 
 ---
 
-## Product Roadmap (Post-Session D)
+## Product Roadmap (Post-Session D) — Next Up
 
-- Personalization layer: inject past question history into synthesis prompt for signed-in users
-- "Send me this result" email capture on results page
-- Saved results / history for signed-in users
-- Sitemap submission to Google Search Console
-- SEO blog content engine (long-tail women's health queries)
-- Monetization tiers: Free (5/day) → Free account (10/day + history) → Pro ($7-9/mo, unlimited)
+### Session E priorities (in order):
+1. **Personalization layer** — inject past question history into synthesis prompt for signed-in users
+2. **"Send me this result" email capture** — on results page, light-touch capture after seeing answer
+3. **Saved results / history** — for signed-in users, accessible from account
+4. **Sitemap submission** — submit `/sitemap.xml` to Google Search Console (manual step, not code)
+5. **SEO blog content engine** — long-tail women's health query pages (separate from curated questions)
+6. **Monetization tiers** — Free (5/day) → Free account (10/day + history) → Pro ($7–9/mo, unlimited)
