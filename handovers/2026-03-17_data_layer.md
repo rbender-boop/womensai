@@ -1,156 +1,139 @@
 # Handover — 2026-03-17
-## Session: Data Monetization Layer + Tagging Pipeline
+## Session: Data Monetization Layer + Tagging Pipeline + Homepage Cleanup
 
 ---
 
-## Context & Strategic Direction
+## Strategic Direction Set This Session
 
-This session was focused entirely on building the **data infrastructure** for AskWomensAI.
-
-The strategic decision made:
-- **No affiliate links. No sponsored answers. No doctor endorsements.**
-- The only future monetization path is the **data asset itself** — anonymized trend reports, API licensing, research partnerships.
-- Every question asked today must be captured correctly or the data is lost forever.
-- The schema was designed to compound in value with every question asked.
+- **No affiliates. No sponsored answers. No doctor endorsements.**
+- The only future monetization path is the **data asset** — anonymized trend reports, API licensing, research partnerships.
+- Every question asked must be fully captured from day one or the data is lost forever.
+- Schema designed to compound in value with every question asked.
+- Always paste SQL migration code directly in chat AND push to GitHub.
 
 ---
 
 ## What Was Built This Session
 
-### 1. Full Data Schema — 7 new tables
-
-Run via Supabase SQL Editor in chunks. All migrations are in `supabase/migrations/`.
+### 1. Full Data Schema — 7 tables (supabase/migrations/004_data_layer.sql)
 
 | Table | Purpose |
 |---|---|
-| `anonymous_sessions` | UUID cookie set on first visit. Root identity for all behavioral data. |
-| `users` | Future accounts. Links back to `anonymous_session_id` to preserve pre-signup history. |
-| `search_requests` | Existing table — extended with 20+ new columns for tagging, sessions, chain tracking, engagement. |
+| `anonymous_sessions` | UUID cookie set on first visit. Root behavioral identity. |
+| `users` | Future accounts. Links to `anonymous_session_id` to preserve pre-signup history. |
+| `search_requests` | Existing table — extended with 20+ columns for tagging, session, chain, engagement. |
 | `provider_results` | One row per AI provider per question. |
 | `compiled_results` | Synthesized output per question. |
-| `share_events` | Every share action by channel. Shareable slugs live here. |
+| `share_events` | Every share action by channel. Slugs live here. |
 | `usage_limits` | Rate limiting by session/user/IP + date bucket. |
-| `topic_trends` | **The monetizable layer.** Nightly aggregation by topic + week. |
+| `topic_trends` | Nightly aggregation by topic + week. The monetizable layer. |
 
-**Migration files:**
-- `supabase/migrations/004_data_layer.sql` — all tables + indexes
-- `supabase/migrations/005_aggregation.sql` — `aggregate_topic_trends()` function
-
-### 2. Nightly Aggregation Cron
-
+### 2. Nightly Aggregation (supabase/migrations/005_aggregation.sql)
 - `aggregate_topic_trends()` PostgreSQL function live in Supabase
-- pg_cron enabled, job scheduled: **2:00 AM UTC daily**
-- Confirmed via `SELECT * FROM cron.job` — jobid 1, active: true
-- Populates `topic_trends` with question counts, engagement, demographic breakdowns, WoW growth, trending flag
+- pg_cron enabled, job ID 1, active: true, schedule: `0 2 * * *` (2AM UTC daily)
+- Populates `topic_trends` with question counts, engagement, demographic breakdowns, WoW % change, trending flag
 
 ### 3. Anonymous Session Tracking
-
 - Cookie: `wai_session` (HttpOnly, SameSite=Strict, 1-year expiry)
-- Set on first visit via `app/api/search/route.ts`
-- `upsertAnonSession()` in `lib/db.ts` — creates row on first visit, updates `last_seen_at` on return
+- Set/read in `app/api/search/route.ts` on every request
+- `upsertAnonSession()` in `lib/db.ts` creates row on first visit, updates `last_seen_at` on return
 - Session ID written to every `search_requests` row
-- `increment_session_question_count()` RPC increments behavioral counter on session
+- `increment_session_question_count()` RPC keeps behavioral counter current
 
-### 4. Auto-Tagging Pipeline
-
-- **File:** `lib/ai/tag-question.ts`
-- Fires after every search response is sent (fire-and-forget, never blocks user)
-- Uses **Claude Haiku** — ~$0.001 per question
-- Tags written back to `search_requests` row:
+### 4. Auto-Tagging Pipeline (lib/ai/tag-question.ts)
+- Fires after every search response is sent — fire-and-forget, never blocks user
+- Uses Claude Haiku (~$0.001/question)
+- Tags written back to `search_requests`:
   - `topic_tags[]` — up to 5 from canonical taxonomy
   - `primary_topic` — single top tag
   - `life_stage` — teen / reproductive / perimenopause / menopause / postmenopause / unknown
   - `category` — health / fitness / wellness / beauty / nutrition / mental_health / other
   - `sentiment` — concerned / curious / urgent / informational
+- **NEVER rename existing taxonomy tags — only append. Renames break trend continuity.**
 
-**Canonical taxonomy:** 60+ stable tags (PCOS, endometriosis, hormones, fertility, perimenopause, HRT, etc.)
-**Rule: never rename existing tags — only append new ones. Renames break trend continuity.**
+### 5. Homepage Updates (app/page.tsx)
+- Added sentence below subheadline: *"See how the AIs agree — or if they disagree on certain key points — in 60 seconds or less."*
+- Removed "How It Works" section from homepage entirely
+- Nav link updated: `#how-it-works` → `/how-it-works`
 
-### 5. Homepage Copy Update
-
-Added one sentence below the subheadline:
-> *See how the AIs agree — or if they disagree on certain key points — in 60 seconds or less.*
-
-### 6. "How It Works" Moved to Standalone Page
-
-- Removed section from homepage
-- Created `/app/how-it-works/page.tsx` — full standalone page with same design system
-- Nav link updated from `#how-it-works` anchor to `/how-it-works`
+### 6. Standalone How It Works Page (app/how-it-works/page.tsx)
+- Full page at `/how-it-works` with same design system
+- CTA at bottom links back to homepage to ask a question
 
 ---
 
 ## Files Changed This Session
 
 ```
-supabase/migrations/004_data_layer.sql     NEW — core schema
+supabase/migrations/004_data_layer.sql     NEW — all tables + indexes
 supabase/migrations/005_aggregation.sql    NEW — nightly aggregation function
-lib/ai/tag-question.ts                     NEW — Haiku tagging pipeline
-lib/db.ts                                  UPDATED — upsertAnonSession(), tagAndUpdateSearch(), persistSearch() extended
-app/api/search/route.ts                    UPDATED — session cookie, upsertAnonSession(), tagAndUpdateSearch() wired
+lib/ai/tag-question.ts                     NEW — Haiku tagging pipeline + TOPIC_TAXONOMY
+lib/db.ts                                  UPDATED — upsertAnonSession(), tagAndUpdateSearch(), persistSearch() extended with sessionId
+app/api/search/route.ts                    UPDATED — session cookie read/set, upsertAnonSession(), tagAndUpdateSearch() wired
 app/how-it-works/page.tsx                  NEW — standalone How It Works page
-app/page.tsx                               UPDATED — removed How It Works section, updated nav link, added copy line
+app/page.tsx                               UPDATED — new copy line, How It Works removed, nav link fixed
+handovers/2026-03-17_data_layer.md         NEW — this file
 ```
 
 ---
 
-## Supabase SQL Run This Session
+## Supabase SQL Run This Session (All Confirmed Success)
 
-All run successfully via SQL Editor:
 - Chunk 1: Extensions + `anonymous_sessions`
 - Chunk 2: `users`
-- Chunk 3: `search_requests` (created fresh — was not in production)
+- Chunk 3: `search_requests` created fresh (was not in production DB)
 - Chunk 4: `share_events`, `usage_limits`, `topic_trends`
 - Chunk 5: All indexes
 - Chunk 6: `aggregate_topic_trends()` function
 - Chunk 7: Self-referencing FK constraints on `search_requests`
 - Chunk 8: `provider_results`, `compiled_results`
-- pg_cron enabled + scheduled
+- pg_cron enabled + job scheduled (jobid: 1, active: true)
 - `increment_session_question_count()` RPC created
 
 ---
 
-## What's NOT Done Yet (Next Session Priorities)
+## Critical Architecture Notes for Next Claude
 
-### Priority 1 — Shareable Links
-`share_events` table is ready. Need:
-- Slug generation on every result page (`nanoid` short slug)
-- Public route: `/a/[slug]` renders compiled answer
-- "Copy link" button on results page
-- Writes to `share_events` with `share_channel: 'link'`
+1. **All changes go directly to GitHub via API. Never write locally.**
 
-### Priority 2 — Follow-Up Questions
-`parent_request_id`, `chain_depth`, `chain_root_id` columns are ready. Need:
-- "Ask a follow-up" button on results page
-- Pre-fills search input with prior question as context
-- Passes `parent_request_id` to API route
-- Route writes chain fields on insert
+2. **`search_requests` is the core fact table.** Every question lives here. All tagging, session, chain, and engagement data hangs off it.
 
-### Priority 3 — Email Capture → Session Link
-`anonymous_sessions` has no email field yet. When a user signs up:
-- Link `email_signups.email` to their `anonymous_session_id`
-- Enables future: "users who asked about PCOS also asked about..."
+3. **`topic_trends` is the data product.** Populated nightly by `aggregate_topic_trends()`. Always query `topic_trends` for trend data — never raw `search_requests`.
 
-### Priority 4 — UTM Capture on First Visit
-The session upsert in `route.ts` reads UTM params from `req.nextUrl.searchParams`.
-These only get captured if the UTM params are passed to the `/api/search` POST.
-Actually need to capture UTMs on the **page load**, not the API call.
-Fix: pass UTMs from client-side `window.location.search` in the search POST body.
+4. **Tag taxonomy is in `lib/ai/tag-question.ts` — `TOPIC_TAXONOMY` array.** Never rename — only append new tags at the bottom.
+
+5. **Tagging is fire-and-forget.** Called after response is sent. Never await it in the request path.
+
+6. **Session ID = UUID stored in cookie `wai_session` = PK in `anonymous_sessions.id`.** Same value used throughout.
+
+7. **`users` table exists but has no auth yet.** Future account creation must link `anonymous_session_id` to preserve pre-signup history.
+
+8. **Always paste SQL in chat AND push to GitHub** (per Rob's standing instruction).
 
 ---
 
-## Important Architecture Notes for Next Claude
+## Next Session Priorities (in order)
 
-1. **`search_requests` is the core fact table.** Every question ever asked lives here. All tagging, session, chain, and engagement data hangs off this table.
+### 1. Shareable Links (HIGHEST PRIORITY per build plan)
+`share_events` table is ready. Need:
+- Slug generation on every result page (nanoid short slug, e.g. `abc123`)
+- Public route: `/a/[slug]` renders compiled answer
+- "Copy link" button on results page
+- Writes to `share_events` with `share_channel: 'link'`
+- Every shared link = free acquisition
 
-2. **`topic_trends` is the data product.** It's populated nightly by `aggregate_topic_trends()`. Don't query `search_requests` for trend data — query `topic_trends`.
+### 2. Follow-Up Questions
+`parent_request_id`, `chain_depth`, `chain_root_id` columns are ready. Need:
+- "Ask a follow-up" button on results page
+- Pre-fills search with prior question as context
+- Passes `parent_request_id` to API route
+- Route writes chain fields on insert
 
-3. **Tag taxonomy is in `lib/ai/tag-question.ts`.** `TOPIC_TAXONOMY` array is the source of truth. Never rename — only append.
+### 3. UTM Capture Fix
+Currently UTMs are read from `req.nextUrl.searchParams` on the API POST — but UTMs live on the page URL, not the API call. Fix: pass UTMs from `window.location.search` in the client-side search POST body.
 
-4. **Tagging is fire-and-forget.** It runs after the response is sent. Never await it in the request path.
-
-5. **Session ID is a UUID nanoid stored in cookie `wai_session`.** It's also stored in `anonymous_sessions.id` — same value, used as PK.
-
-6. **`users` table exists but has no auth yet.** Future account creation should link `anonymous_session_id` to the new user row so pre-signup history is preserved.
+### 4. Email → Session Link
+When a user signs up, link `email_signups.email` to their `anonymous_session_id` so behavioral history carries forward.
 
 ---
 
