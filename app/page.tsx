@@ -225,7 +225,7 @@ export default function HomePage() {
           <div className="w-full bg-white rounded-2xl transition-all" style={{ border: '1.5px solid #EDE8E3', boxShadow: '0 2px 12px rgba(155, 65, 99, 0.06)' }}>
             <textarea
               className="w-full px-5 pt-4 pb-2 text-base placeholder-warm-muted bg-transparent resize-none focus:outline-none rounded-t-2xl leading-relaxed text-warm-black"
-              placeholder="Ask a health question you want multiple AI perspectives on…"
+              placeholder="Ask a health, fitness, wellness, or beauty question…"
               rows={3}
               value={query}
               onChange={(e) => { setQuery(e.target.value); setError(''); }}
@@ -267,7 +267,7 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* Why we're different — now FIRST */}
+        {/* Why we're different */}
         <section id="why-different" className="w-full max-w-4xl mx-auto py-14 border-t border-warm-border">
           <div className="text-center mb-3">
             <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#9B4163' }}>One AI isn&apos;t enough</span>
@@ -285,12 +285,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* How it works — now SECOND */}
+        {/* How it works */}
         <section id="how-it-works" className="w-full max-w-4xl mx-auto py-16 border-t border-warm-border">
           <h2 className="font-serif text-3xl font-bold text-warm-black text-center mb-10">How AskWomensAI works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
-              { icon: Search, title: '1. Ask once', desc: 'Type your health question one time. No need to open four browser tabs or wonder which AI to trust.' },
+              { icon: Search, title: '1. Ask once', desc: 'Type your question one time. No need to open four browser tabs or wonder which AI to trust.' },
               { icon: Sparkles, title: '2. All four AIs answer', desc: 'ChatGPT, Gemini, Claude, and Grok all respond in parallel — usually in under 30 seconds.' },
               { icon: CheckCheck, title: '3. Get a compiled answer', desc: 'See what they agree on, where they differ, and a synthesized best answer to guide your next step.' },
             ].map(({ icon: Icon, title, desc }) => (
