@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { DM_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { QotdBanner } from '@/components/qotd-banner';
+import { PageViewTracker } from '@/components/page-view-tracker';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -35,6 +36,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         {/* Question of the Day — appears above every page */}
         <QotdBanner />
+        {/* Track page views for admin dashboard */}
+        <PageViewTracker />
         {children}
       </body>
     </html>
