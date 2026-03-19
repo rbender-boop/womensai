@@ -1,8 +1,10 @@
+import { InteriorHeader } from '@/components/interior-header';
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #FDF5F8 0%, #FBF8F5 45%, #F6EFF9 100%)' }}>
-      <div className="max-w-2xl mx-auto px-6 py-16">
-        <a href="/" className="text-sm mb-8 inline-block" style={{ color: '#9B4163' }}>← Back</a>
+      <InteriorHeader />
+      <div className="max-w-2xl mx-auto px-6 py-12">
         <h1 style={{ fontFamily: 'var(--font-playfair)', fontSize: '36px', fontWeight: 700, color: '#1C1714', marginBottom: '8px' }}>Terms of Service</h1>
         <p className="text-sm mb-10" style={{ color: '#AFA8A2' }}>Last updated: March 2026</p>
         <div className="space-y-8" style={{ color: '#7A6E67', lineHeight: 1.8, fontSize: '15px' }}>

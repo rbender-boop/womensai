@@ -6,7 +6,7 @@ const ADMIN_EMAIL = 'kelly@askwomensai.com';
 
 export async function sendWelcomeEmail(to: string) {
   if (!RESEND_API_KEY) {
-    console.log('RESEND_API_KEY not set — skipping welcome email');
+    console.log('RESEND_API_KEY not set \u2014 skipping welcome email');
     return;
   }
 
@@ -42,7 +42,7 @@ export async function sendWelcomeEmail(to: string) {
                     Your profile is anonymous.
                   </p>
                   <p style="margin:0 0 20px;font-size:15px;color:#5C524D;line-height:1.7;">
-                    The more you ask, the smarter and more personalized your answers get — and your questions always remain anonymous.
+                    The more you ask, the smarter and more personalized your answers get \u2014 and your questions always remain anonymous.
                   </p>
                   <p style="margin:0 0 28px;font-size:15px;color:#5C524D;line-height:1.7;">
                     Keep asking. The more context we have, the better and more personalized your answers get.
@@ -56,7 +56,7 @@ export async function sendWelcomeEmail(to: string) {
                           href="https://www.askwomensai.com"
                           style="display:inline-block;padding:13px 28px;font-family:Georgia,serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;letter-spacing:0.2px;"
                         >
-                          Ask your next question →
+                          Ask your next question \u2192
                         </a>
                       </td>
                     </tr>
@@ -97,7 +97,7 @@ export async function sendWelcomeEmail(to: string) {
       body: JSON.stringify({
         from: FROM,
         to: [to],
-        subject: "You're in — your profile is anonymous",
+        subject: "You're in \u2014 your profile is anonymous",
         html,
       }),
     });
@@ -111,7 +111,7 @@ export async function sendWelcomeEmail(to: string) {
   }
 }
 
-// ─── Admin notification: fires on every new signup → kelly@ ─────────────────
+// ─── Admin notification: fires on every new signup \u2192 kelly@ ─────────────────
 
 export async function sendSignupNotification({
   email,
@@ -123,7 +123,7 @@ export async function sendSignupNotification({
   source?: string;
 }) {
   if (!RESEND_API_KEY) {
-    console.log('RESEND_API_KEY not set — skipping signup notification');
+    console.log('RESEND_API_KEY not set \u2014 skipping signup notification');
     return;
   }
 
@@ -181,7 +181,7 @@ export async function sendSignupNotification({
   }
 }
 
-// ─── QOTD email — minimal personal style, teaser only ───────────────────────
+// ─── QOTD email \u2014 minimal personal style, teaser only ───────────────────────
 
 export async function sendDailyQotdEmail({
   recipients,
@@ -217,7 +217,8 @@ export async function sendDailyQotdEmail({
     <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#1C1714;line-height:1.45;">${escapeHtml(question)}</p>
     <p style="margin:0 0 28px;font-size:15px;color:#5C524D;line-height:1.75;">${escapeHtml(displayTeaser)}</p>
     <a href="${searchUrl}" style="display:inline-block;padding:13px 28px;background:#9B4163;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;border-radius:10px;font-family:Georgia,serif;">Search for the answer &#8594;</a>
-    <p style="margin:36px 0 0;font-size:11px;color:#A89E97;line-height:1.6;">For research only. Always consult a qualified healthcare provider.<br/><a href="${unsubscribeUrl}" style="color:#A89E97;">Unsubscribe</a></p>
+    <p style="margin:20px 0 0;font-size:12px;color:#A89E97;">Know someone who'd find this useful? <a href="${searchUrl}&ref=share" style="color:#9B4163;text-decoration:underline;">Share it</a></p>
+    <p style="margin:24px 0 0;font-size:11px;color:#A89E97;line-height:1.6;">For research only. Always consult a qualified healthcare provider.<br/><a href="${unsubscribeUrl}" style="color:#A89E97;">Unsubscribe</a></p>
   </div>
 </body>
 </html>`;

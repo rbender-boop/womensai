@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Sparkles, CheckCheck, GitFork, AlignLeft, AlertCircle,
-  RotateCcw, Home, Mail, MessageSquare, Share2, X,
-  Copy, Check, BookmarkPlus, Users,
+  RotateCcw, Home, Mail, MessageSquare, X,
+  Copy, Check, BookmarkPlus,
 } from 'lucide-react';
 import type { SearchResponse, ProviderResult } from '@/types/search';
+import { ShareCard } from '@/components/share-card';
+import { AuthGateModal } from '@/components/auth-gate-modal';
 
-// ── Style maps ────────────────────────────────────────────────────────────────
+// ── Style maps ─────────────────────────────────────────────────────────────────
 const PROVIDER_STYLES: Record<string, { bg: string; border: string; text: string; dot: string }> = {
   chatgpt: { bg: '#EFF6EF', border: '#C2D9C0', text: '#2F6B2B', dot: '#4A9645' },
   gemini:  { bg: '#EBF0F8', border: '#B8CCE2', text: '#264F7A', dot: '#3B76B0' },
@@ -24,7 +26,7 @@ const AI_CARDS = [
   { label: 'Grok',    color: '#5E2F85', bg: '#F3EEF8', border: '#D4BEED', dot: '#8B4CBF', delay: '1.05s' },
 ];
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
 function ProviderBadge({ provider, label }: { provider: string; label: string }) {
   const s = PROVIDER_STYLES[provider] || { bg: '#F3F0EC', border: '#DDD5CE', text: '#7A6E67', dot: '#AFA8A2' };
   return (
@@ -123,8 +125,6 @@ export default function ResultsPage() {
   const params = useSearchParams();
   const router = useRouter();
 
-  // q = full enriched query sent to the API
-  // dq = original display query shown to the user (present when follow-up context was added)
   const query = params.get('q') || '';
   const displayQuery = params.get('dq')
     ? decodeURIComponent(params.get('dq')!)
@@ -142,6 +142,11 @@ export default function ResultsPage() {
   const [shareLoading, setShareLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Auth
+  const [user, setUser] = useState<{ id: string; firstName: string; email: string } | null>(null);
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+
   // Modals
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [emailSelf, setEmailSelf] = useState('');
@@ -152,7 +157,15 @@ export default function ResultsPage() {
   const [saveEmail, setSaveEmail] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // ── Load user from localStorage ────────────────────────────────────────────
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('wai_user');
+      if (stored) setUser(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
   async function runSearch(q: string) {
     if (!q || q.length < 8) return;
     setLoading(true);
@@ -183,7 +196,7 @@ export default function ResultsPage() {
         if (first) setActiveTab(first.provider);
       }
     } catch {
-      setError('Network error — please check your connection and try again.');
+      setError('Network error \u2014 please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -198,7 +211,7 @@ export default function ResultsPage() {
   const providers = data?.providers || [];
   const activeProvider = providers.find((p) => p.provider === activeTab);
 
-  // ── Share / email helpers ────────────────────────────────────────────────────
+  // ── Share / email helpers ─────────────────────────────────────────────────
   async function getShareUrl(): Promise<string> {
     if (shareSlug) return `${window.location.origin}/a/${shareSlug}`;
     setShareLoading(true);
@@ -257,7 +270,7 @@ export default function ResultsPage() {
 
   async function handleSocialShare(platform: string) {
     const url = await getShareUrl();
-    const text = `I asked ChatGPT, Gemini, Claude & Grok: "${displayQuery.slice(0, 80)}" — here's what they said:`;
+    const text = `I asked ChatGPT, Gemini, Claude & Grok: "${displayQuery.slice(0, 80)}" \u2014 here's what they said:`;
     const eu = encodeURIComponent(url);
     const et = encodeURIComponent(text);
     const links: Record<string, string> = {
@@ -267,6 +280,25 @@ export default function ResultsPage() {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${eu}`,
     };
     window.open(links[platform], '_blank', 'noopener,noreferrer');
+  }
+
+  // ── Auth-gated email-a-friend ───────────────────────────────────────────
+  function handleEmailFriendClick() {
+    if (!user) {
+      setPendingAction('email-friend');
+      setShowAuthGate(true);
+      return;
+    }
+    openModal('email-friend');
+  }
+
+  function handleAuthSuccess(userData: { id: string; firstName: string; email: string }) {
+    setUser(userData);
+    setShowAuthGate(false);
+    if (pendingAction === 'email-friend') {
+      openModal('email-friend');
+    }
+    setPendingAction(null);
   }
 
   async function handleSaveSignup() {
@@ -288,7 +320,7 @@ export default function ResultsPage() {
     setSaveStatus('idle');
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-cream">
       {/* Progress bar */}
@@ -326,7 +358,7 @@ export default function ResultsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-4">
-        {/* Question — shows clean display query, not enriched context */}
+        {/* Question */}
         {displayQuery && (
           <div className="bg-white rounded-2xl px-5 py-4" style={{ border: '1px solid #EDE8E3' }}>
             <p className="text-xs text-warm-muted mb-1.5 font-medium uppercase tracking-widest">Your question</p>
@@ -349,17 +381,17 @@ export default function ResultsPage() {
         {loading && (
           <>
             <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #EDE8E3' }}>
-              <p className="text-xs font-medium uppercase tracking-widest text-warm-muted mb-5 text-center">Querying all four AIs simultaneously…</p>
+              <p className="text-xs font-medium uppercase tracking-widest text-warm-muted mb-5 text-center">Querying all four AIs simultaneously\u2026</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
                 {AI_CARDS.map(({ label, color, bg, border, dot, delay }) => (
                   <div key={label} className="flex flex-col items-center gap-2.5 rounded-xl py-5 px-3" style={{ background: bg, border: `1px solid ${border}` }}>
                     <div className="w-3 h-3 rounded-full" style={{ background: dot, animation: 'aiPulse 1.4s ease-in-out infinite', animationDelay: delay }} />
                     <span className="text-sm font-semibold" style={{ color }}>{label}</span>
-                    <span className="text-xs text-warm-muted">thinking…</span>
+                    <span className="text-xs text-warm-muted">thinking\u2026</span>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-warm-muted text-center">This usually takes 15–30 seconds. Please don&apos;t close this tab.</p>
+              <p className="text-xs text-warm-muted text-center">This usually takes 15\u201330 seconds. Please don&apos;t close this tab.</p>
             </div>
             <SkeletonCard lines={5} />
             <SkeletonCard lines={3} />
@@ -376,16 +408,25 @@ export default function ResultsPage() {
               </div>
             )}
 
-            {/* Best Answer */}
-            <div className="bg-white rounded-2xl p-6" style={{ border: '1px solid #EDE8E3' }}>
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#9B4163' }}>
-                  <Sparkles size={13} style={{ color: '#fff' }} />
+            {/* Best Answer + Share Card */}
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="bg-white rounded-2xl p-6 flex-1 min-w-0" style={{ border: '1px solid #EDE8E3' }}>
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#9B4163' }}>
+                    <Sparkles size={13} style={{ color: '#fff' }} />
+                  </div>
+                  <h2 className="font-semibold text-warm-black">Best Answer</h2>
+                  <span className="text-xs text-warm-muted ml-auto">Synthesized from all responses</span>
                 </div>
-                <h2 className="font-semibold text-warm-black">Best Answer</h2>
-                <span className="text-xs text-warm-muted ml-auto">Synthesized from all responses</span>
+                <p className="text-sm text-warm-gray leading-relaxed whitespace-pre-wrap">{compiled.bestAnswer}</p>
               </div>
-              <p className="text-sm text-warm-gray leading-relaxed whitespace-pre-wrap">{compiled.bestAnswer}</p>
+              <ShareCard
+                onShareSocial={handleSocialShare}
+                onEmailFriend={handleEmailFriendClick}
+                onCopyLink={handleCopyLink}
+                shareLoading={shareLoading}
+                copied={copied}
+              />
             </div>
 
             {/* Consensus */}
@@ -400,7 +441,7 @@ export default function ResultsPage() {
                 <ul className="space-y-2.5">
                   {compiled.consensus.map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm text-warm-gray">
-                      <span className="mt-0.5 shrink-0 text-xs" style={{ color: '#4A9645' }}>✓</span>
+                      <span className="mt-0.5 shrink-0 text-xs" style={{ color: '#4A9645' }}>\u2713</span>
                       {item}
                     </li>
                   ))}
@@ -420,7 +461,7 @@ export default function ResultsPage() {
                 <ul className="space-y-2.5">
                   {compiled.disagreements.map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm text-warm-gray">
-                      <span className="mt-0.5 shrink-0" style={{ color: '#B08030' }}>≠</span>
+                      <span className="mt-0.5 shrink-0" style={{ color: '#B08030' }}>\u2260</span>
                       {item}
                     </li>
                   ))}
@@ -461,20 +502,12 @@ export default function ResultsPage() {
               {activeProvider && <ProviderCard result={activeProvider} />}
             </div>
 
-            {/* ── Action Bar ─────────────────────────────────────────────── */}
+            {/* \u2500\u2500 Action Bar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */}
             <div className="bg-white rounded-2xl p-5" style={{ border: '1px solid #EDE8E3' }}>
               <p className="text-xs font-medium text-warm-muted uppercase tracking-widest mb-4">What would you like to do?</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 <ActionBtn icon={<Mail size={14} />}        label="Email me this"     onClick={() => openModal('email-self')} />
                 <ActionBtn icon={<MessageSquare size={14} />} label="Ask a follow-up"  onClick={() => { openModal('followup'); setFollowUpText(''); }} />
-                <ActionBtn icon={<Users size={14} />}       label="Email a friend"    onClick={() => openModal('email-friend')} />
-                <ActionBtn
-                  icon={copied ? <Check size={14} /> : <Copy size={14} />}
-                  label={copied ? 'Copied!' : shareLoading ? 'Generating…' : 'Copy share link'}
-                  onClick={handleCopyLink}
-                  active={copied}
-                />
-                <ActionBtn icon={<Share2 size={14} />}      label="Share on socials"  onClick={() => openModal('social')} />
                 <ActionBtn icon={<BookmarkPlus size={14} />} label="Save your answers" onClick={() => openModal('save')} highlight />
               </div>
             </div>
@@ -487,7 +520,15 @@ export default function ResultsPage() {
         )}
       </main>
 
-      {/* ── Modals ───────────────────────────────────────────────────────────── */}
+      {/* \u2500\u2500 Modals \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */}
+
+      {/* Auth Gate */}
+      {showAuthGate && (
+        <AuthGateModal
+          onClose={() => { setShowAuthGate(false); setPendingAction(null); }}
+          onSuccess={handleAuthSuccess}
+        />
+      )}
 
       {/* 1. Email me this */}
       {activeModal === 'email-self' && (
@@ -495,7 +536,7 @@ export default function ResultsPage() {
           <p className="text-sm text-warm-muted mb-4">We&apos;ll send the full answer to your inbox.</p>
           {emailStatus === 'sent' ? (
             <div className="text-center py-4">
-              <p className="text-3xl mb-3">✓</p>
+              <p className="text-3xl mb-3">\u2713</p>
               <p className="font-medium text-warm-black">Sent!</p>
               <p className="text-sm text-warm-muted mt-1">Check your inbox in a moment.</p>
               <button onClick={() => setActiveModal(null)} className="mt-4 text-sm underline" style={{ color: '#9B4163' }}>Close</button>
@@ -514,7 +555,7 @@ export default function ResultsPage() {
               <button onClick={() => handleSendEmail('self')} disabled={emailStatus === 'sending'}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
                 style={{ background: '#9B4163', color: '#fff', opacity: emailStatus === 'sending' ? 0.7 : 1 }}>
-                {emailStatus === 'sending' ? 'Sending…' : 'Send to my inbox'}
+                {emailStatus === 'sending' ? 'Sending\u2026' : 'Send to my inbox'}
               </button>
             </>
           )}
@@ -525,7 +566,7 @@ export default function ResultsPage() {
       {activeModal === 'followup' && (
         <Modal title="Ask a follow-up" onClose={() => setActiveModal(null)}>
           <p className="text-xs text-warm-muted mb-3">
-            Original: <em className="text-warm-gray">{displayQuery.slice(0, 90)}{displayQuery.length > 90 ? '…' : ''}</em>
+            Original: <em className="text-warm-gray">{displayQuery.slice(0, 90)}{displayQuery.length > 90 ? '\u2026' : ''}</em>
           </p>
           <textarea
             rows={3} value={followUpText} onChange={(e) => setFollowUpText(e.target.value)}
@@ -534,7 +575,7 @@ export default function ResultsPage() {
             style={{ border: '1px solid #EDE8E3', background: '#FAF7F5' }}
           />
           <button onClick={handleFollowUp} className="w-full py-3 rounded-xl text-sm font-semibold" style={{ background: '#9B4163', color: '#fff' }}>
-            Ask all 4 AIs →
+            Ask all 4 AIs \u2192
           </button>
         </Modal>
       )}
@@ -545,7 +586,7 @@ export default function ResultsPage() {
           <p className="text-sm text-warm-muted mb-4">Share this answer with someone who&apos;d find it useful.</p>
           {emailStatus === 'sent' ? (
             <div className="text-center py-4">
-              <p className="text-3xl mb-3">✓</p>
+              <p className="text-3xl mb-3">\u2713</p>
               <p className="font-medium text-warm-black">Sent!</p>
               <p className="text-sm text-warm-muted mt-1">Your friend should have it shortly.</p>
               <button onClick={() => setActiveModal(null)} className="mt-4 text-sm underline" style={{ color: '#9B4163' }}>Close</button>
@@ -555,7 +596,7 @@ export default function ResultsPage() {
               <label className="block text-xs font-medium text-warm-muted mb-1.5 uppercase tracking-widest">Optional note</label>
               <textarea
                 rows={2} value={emailNote} onChange={(e) => setEmailNote(e.target.value)}
-                placeholder="Thought you&apos;d find this helpful…"
+                placeholder="Thought you'd find this helpful\u2026"
                 className="w-full text-sm px-3.5 py-2.5 rounded-xl outline-none resize-none mb-4"
                 style={{ border: '1px solid #EDE8E3', background: '#FAF7F5' }}
               />
@@ -571,48 +612,19 @@ export default function ResultsPage() {
               <button onClick={() => handleSendEmail('friend')} disabled={emailStatus === 'sending'}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
                 style={{ background: '#9B4163', color: '#fff', opacity: emailStatus === 'sending' ? 0.7 : 1 }}>
-                {emailStatus === 'sending' ? 'Sending…' : 'Send to friend'}
+                {emailStatus === 'sending' ? 'Sending\u2026' : 'Send to friend'}
               </button>
             </>
           )}
         </Modal>
       )}
 
-      {/* 4. Share on socials */}
-      {activeModal === 'social' && (
-        <Modal title="Share on socials" onClose={() => setActiveModal(null)}>
-          <p className="text-sm text-warm-muted mb-5">Share this answer with your network.</p>
-          <div className="grid grid-cols-2 gap-2.5 mb-4">
-            {[
-              { id: 'twitter',  label: '𝕏  Twitter / X', bg: '#000',    color: '#fff' },
-              { id: 'linkedin', label: 'in  LinkedIn',    bg: '#0077B5', color: '#fff' },
-              { id: 'whatsapp', label: '💬 WhatsApp',     bg: '#25D366', color: '#fff' },
-              { id: 'facebook', label: 'f  Facebook',     bg: '#1877F2', color: '#fff' },
-            ].map(({ id, label, bg, color }) => (
-              <button key={id} onClick={() => handleSocialShare(id)}
-                className="py-3 px-4 rounded-xl text-sm font-semibold transition-opacity"
-                style={{ background: bg, color, opacity: shareLoading ? 0.6 : 1 }}>
-                {shareLoading ? '…' : label}
-              </button>
-            ))}
-          </div>
-          <div className="pt-4" style={{ borderTop: '1px solid #EDE8E3' }}>
-            <button onClick={handleCopyLink}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium"
-              style={{ background: '#FAF7F5', color: '#4A4540', border: '1px solid #EDE8E3' }}>
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? 'Link copied!' : 'Copy link instead'}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* 5. Save your answers */}
+      {/* 4. Save your answers */}
       {activeModal === 'save' && (
         <Modal title="Save your answers" onClose={() => setActiveModal(null)}>
           {saveStatus === 'sent' ? (
             <div className="text-center py-4">
-              <p className="text-3xl mb-3">✓</p>
+              <p className="text-3xl mb-3">\u2713</p>
               <p className="font-medium text-warm-black">You&apos;re on the list!</p>
               <p className="text-sm text-warm-muted mt-1 leading-relaxed">We&apos;ll let you know when saved history is live.</p>
               <button onClick={() => setActiveModal(null)} className="mt-4 text-sm underline" style={{ color: '#9B4163' }}>Close</button>
@@ -635,7 +647,7 @@ export default function ResultsPage() {
               <button onClick={handleSaveSignup} disabled={saveStatus === 'sending'}
                 className="w-full py-3 rounded-xl text-sm font-semibold"
                 style={{ background: '#9B4163', color: '#fff', opacity: saveStatus === 'sending' ? 0.7 : 1 }}>
-                {saveStatus === 'sending' ? 'Saving…' : 'Notify me when it\'s ready'}
+                {saveStatus === 'sending' ? 'Saving\u2026' : 'Notify me when it\'s ready'}
               </button>
             </>
           )}
