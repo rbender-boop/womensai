@@ -588,7 +588,7 @@ export default function HomePage() {
           <div className="flex items-center">
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#1C1714' }}>AskWomens</span>
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#8B3058', fontStyle: 'italic' }}>AI</span>
-            <span className="ml-2 text-xs" style={{ color: '#AFA8A2' }}>© 2026</span>
+            <a href="/admin" className="ml-2 text-xs" style={{ color: '#AFA8A2', textDecoration: 'none' }}>© 2026</a>
           </div>
           <div className="flex items-center gap-6">
             <a href="/questions" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Questions</a>
