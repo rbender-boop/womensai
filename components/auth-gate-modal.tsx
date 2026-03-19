@@ -126,7 +126,10 @@ export function AuthGateModal({ onClose, onSuccess }: AuthGateModalProps) {
             <button onClick={handleSignup} disabled={loading} className="w-full py-3 rounded-xl text-sm font-semibold" style={{ background: '#9B4163', color: '#fff', opacity: loading ? 0.7 : 1 }}>
               {loading ? 'Creating account\u2026' : 'Create free account'}
             </button>
-            <p className="text-center text-xs text-warm-muted mt-3">
+            <p className="text-center text-xs text-warm-muted mt-3 leading-relaxed" style={{ color: '#AFA8A2' }}>
+              We will never share your name or email. Your questions are always anonymous.
+            </p>
+            <p className="text-center text-xs text-warm-muted mt-2">
               Already have an account?{' '}
               <button onClick={() => switchMode('login')} className="underline" style={{ color: '#9B4163' }}>Log in</button>
             </p>

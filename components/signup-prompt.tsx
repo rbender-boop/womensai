@@ -149,6 +149,9 @@ export function SignupPrompt({ variant, onDismiss, onSignedUp }: SignupPromptPro
               >
                 {loading ? 'Signing up...' : 'Sign up free'}
               </button>
+              <p className="text-center text-xs leading-relaxed" style={{ color: '#AFA8A2' }}>
+                We will never share your email. Your questions are always anonymous.
+              </p>
               <button
                 onClick={onDismiss}
                 className="text-xs text-warm-muted hover:text-warm-black transition-colors text-center py-1"
