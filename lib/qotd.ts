@@ -12,8 +12,10 @@ export type QuestionOfTheDay = {
   date: string;
   question: string;
   answer: string;
+  teaser: string | null;
   category: string | null;
   generated_at: string;
+  emailed_at: string | null;
 };
 
 // ─── Fetch today's QOTD (used by the banner API route) ───────────────────────
@@ -42,7 +44,7 @@ export async function generateAndStoreQotd(): Promise<QuestionOfTheDay> {
   const existing = await getTodayQotd();
   if (existing) return existing;
 
-  const { question, answer, category } = await callClaudeForQotd();
+  const { question, answer, teaser, category } = await callClaudeForQotd();
 
   const { data, error } = await supabase
     .from('question_of_the_day')
@@ -50,6 +52,7 @@ export async function generateAndStoreQotd(): Promise<QuestionOfTheDay> {
       date: today,
       question,
       answer,
+      teaser,
       category,
       model_used: 'claude-sonnet-4-20250514',
     })
@@ -77,11 +80,37 @@ export async function getQotdSubscribers(): Promise<string[]> {
   return data.map((r: { email: string }) => r.email);
 }
 
+// ─── 3-day email cadence check ───────────────────────────────────────────────
+
+export async function shouldSendEmailToday(): Promise<boolean> {
+  const supabase = getClient();
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  const { data } = await supabase
+    .from('question_of_the_day')
+    .select('emailed_at')
+    .not('emailed_at', 'is', null)
+    .gte('emailed_at', threeDaysAgo.toISOString())
+    .limit(1);
+
+  return !data || data.length === 0;
+}
+
+export async function markAsEmailed(date: string): Promise<void> {
+  const supabase = getClient();
+  await supabase
+    .from('question_of_the_day')
+    .update({ emailed_at: new Date().toISOString() })
+    .eq('date', date);
+}
+
 // ─── Claude API call ──────────────────────────────────────────────────────────
 
 async function callClaudeForQotd(): Promise<{
   question: string;
   answer: string;
+  teaser: string;
   category: string;
 }> {
   const today = new Date().toLocaleDateString('en-US', {
@@ -104,10 +133,17 @@ Then write a concise, practical answer (150-200 words) that:
 - Sounds like a trusted, knowledgeable friend — not clinical, not marketing
 - Ends with a suggestion for next steps
 
+Also write a teaser (2-3 sentences, max 60 words) that:
+- Hooks the reader with the most surprising or useful insight from the answer
+- Does NOT give away the full answer
+- Makes the reader want to click to learn more
+- Ends with something like "Here's what the top AIs say..." or similar
+
 Return ONLY valid JSON in exactly this format, nothing else:
 {
   "question": "...",
   "answer": "...",
+  "teaser": "...",
   "category": "one of: hormones | nutrition | fitness | skincare | mental-health | sleep | perimenopause | fertility | general"
 }`;
 
@@ -120,7 +156,7 @@ Return ONLY valid JSON in exactly this format, nothing else:
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 600,
+      max_tokens: 800,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
@@ -138,6 +174,7 @@ Return ONLY valid JSON in exactly this format, nothing else:
     return {
       question: parsed.question,
       answer: parsed.answer,
+      teaser: parsed.teaser ?? '',
       category: parsed.category ?? 'general',
     };
   } catch {

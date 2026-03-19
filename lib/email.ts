@@ -181,61 +181,46 @@ export async function sendSignupNotification({
   }
 }
 
-// ─── Daily QOTD email to subscriber list ─────────────────────────────────────
+// ─── QOTD email — minimal personal style, teaser only ───────────────────────
 
 export async function sendDailyQotdEmail({
   recipients,
   question,
+  teaser,
   answer,
   date,
 }: {
   recipients: string[];
   question: string;
+  teaser?: string;
   answer: string;
   date: string;
 }) {
   if (!RESEND_API_KEY || !recipients.length) return { sent: 0 };
 
-  const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric',
-  });
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.askwomensai.com';
+  const searchUrl = `${appUrl}?q=${encodeURIComponent(question)}`;
+  const unsubscribeUrl = `${appUrl}/unsubscribe`;
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <body style="margin:0;padding:0;background:#FAF7F5;font-family:Georgia,serif;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F5;padding:40px 16px;">
-        <tr><td align="center">
-          <table width="100%" style="max-width:540px;background:#fff;border-radius:16px;border:1px solid #EDE8E3;overflow:hidden;">
-            <tr><td style="background:#9B4163;padding:20px 36px;">
-              <p style="margin:0;font-size:18px;font-weight:bold;color:#fff;">AskWomens<span style="color:#F7C5D5;">AI</span></p>
-            </td></tr>
-            <tr><td style="padding:32px 36px 24px;">
-              <p style="margin:0 0 6px;font-size:11px;color:#A89E97;text-transform:uppercase;letter-spacing:1.5px;">${formattedDate}</p>
-              <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#9B4163;text-transform:uppercase;letter-spacing:1px;">Question of the Day</p>
-              <p style="margin:0 0 24px;font-size:19px;font-weight:700;color:#1C1714;line-height:1.45;">${question}</p>
-              <div style="background:#FAF7F5;border-left:3px solid #DCA8C0;padding:16px 20px;border-radius:0 10px 10px 0;margin-bottom:28px;">
-                <p style="margin:0;font-size:14px;line-height:1.75;color:#5C524D;">${answer}</p>
-              </div>
-              <table cellpadding="0" cellspacing="0">
-                <tr><td style="background:#9B4163;border-radius:10px;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL}?q=${encodeURIComponent(question)}"
-                     style="display:inline-block;padding:12px 24px;font-size:13px;font-weight:bold;color:#fff;text-decoration:none;">
-                    Ask all AIs this question →
-                  </a>
-                </td></tr>
-              </table>
-            </td></tr>
-            <tr><td style="padding:0 36px;"><hr style="border:none;border-top:1px solid #EDE8E3;" /></td></tr>
-            <tr><td style="padding:16px 36px 24px;">
-              <p style="margin:0;font-size:11px;color:#A89E97;line-height:1.6;">For research only. Always consult a qualified healthcare provider.<br />
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe" style="color:#A89E97;">Unsubscribe</a></p>
-            </td></tr>
-          </table>
-        </td></tr>
-      </table>
-    </body></html>
-  `;
+  // Use teaser if available, otherwise truncate answer to ~2 sentences
+  const displayTeaser = teaser || truncateToTeaser(answer);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:0;font-family:Georgia,'Times New Roman',serif;background:#ffffff;color:#1C1714;">
+  <div style="max-width:520px;margin:0 auto;padding:40px 24px;">
+    <p style="margin:0 0 28px;font-size:13px;color:#9B4163;font-weight:600;letter-spacing:0.5px;">AskWomensAI</p>
+    <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#1C1714;line-height:1.45;">${escapeHtml(question)}</p>
+    <p style="margin:0 0 28px;font-size:15px;color:#5C524D;line-height:1.75;">${escapeHtml(displayTeaser)}</p>
+    <a href="${searchUrl}" style="display:inline-block;padding:13px 28px;background:#9B4163;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;border-radius:10px;font-family:Georgia,serif;">Search for the answer &#8594;</a>
+    <p style="margin:36px 0 0;font-size:11px;color:#A89E97;line-height:1.6;">For research only. Always consult a qualified healthcare provider.<br/><a href="${unsubscribeUrl}" style="color:#A89E97;">Unsubscribe</a></p>
+  </div>
+</body>
+</html>`;
 
   // Resend batch: max 100 per call
   const batches = chunk(recipients, 100);
@@ -253,8 +238,12 @@ export async function sendDailyQotdEmail({
           batch.map((to) => ({
             from: FROM,
             to: [to],
-            subject: `Question of the Day — ${formattedDate}`,
+            subject: question,
             html,
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
           }))
         ),
       });
@@ -271,6 +260,22 @@ export async function sendDailyQotdEmail({
   }
 
   return { sent: totalSent };
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function truncateToTeaser(answer: string): string {
+  const sentences = answer.split(/(?<=[.!?])\s+/);
+  const first2 = sentences.slice(0, 2).join(' ');
+  return first2.length > 200 ? first2.slice(0, 197) + '...' : first2;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function chunk<T>(arr: T[], size: number): T[][] {
