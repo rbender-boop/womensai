@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { searchSchema } from '@/lib/validations';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { synthesizeResponses } from '@/lib/ai/synthesize';
-import { persistSearch, upsertAnonSession, tagAndUpdateSearch } from '@/lib/db';
+import { persistSearch, persistCacheHit, upsertAnonSession, tagAndUpdateSearch } from '@/lib/db';
 import { runOpenAI } from '@/lib/ai/providers/openai';
 import { runAnthropic } from '@/lib/ai/providers/anthropic';
 import { runGemini } from '@/lib/ai/providers/gemini';
@@ -93,6 +93,10 @@ export async function POST(req: NextRequest) {
 
   const exactHit = await checkExactCache(queryHash);
   if (exactHit) {
+    // Log cache hit so it shows in admin dashboard
+    persistCacheHit(requestId, query, ipHash, sessionId, Date.now() - start).catch(console.error);
+    tagAndUpdateSearch(requestId, query).catch(console.error);
+
     const res = NextResponse.json({
       requestId,
       status: 'success',
@@ -110,6 +114,10 @@ export async function POST(req: NextRequest) {
   if (embedding) {
     const semanticHit = await checkSemanticCache(embedding);
     if (semanticHit) {
+      // Log cache hit so it shows in admin dashboard
+      persistCacheHit(requestId, query, ipHash, sessionId, Date.now() - start).catch(console.error);
+      tagAndUpdateSearch(requestId, query).catch(console.error);
+
       const res = NextResponse.json({
         requestId,
         status: 'success',

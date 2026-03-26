@@ -102,6 +102,39 @@ export async function persistSearch(
   }
 }
 
+// ── Persist cache hit (lightweight log so admin dashboard counts every question) ──
+export async function persistCacheHit(
+  requestId: string,
+  query: string,
+  ipHash: string,
+  sessionId?: string,
+  totalLatencyMs?: number
+) {
+  const supabase = getClient();
+  if (!supabase) return;
+
+  try {
+    await supabase.from('search_requests').insert({
+      id: requestId,
+      query_text: query,
+      query_normalized: query.toLowerCase().trim(),
+      ip_hash: ipHash,
+      anonymous_session_id: sessionId ?? null,
+      status: 'success',
+      total_latency_ms: totalLatencyMs ?? 0,
+      success_provider_count: 4,
+      failed_provider_count: 0,
+      provider_success_count: 4,
+    });
+
+    if (sessionId) {
+      await supabase.rpc('increment_session_question_count', { session_id: sessionId });
+    }
+  } catch (err) {
+    console.error('Supabase cache-hit persist error:', err);
+  }
+}
+
 // ── Tag and write back ───────────────────────────────────────────────────────
 export async function tagAndUpdateSearch(requestId: string, query: string) {
   const supabase = getClient();
