@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
+import { randomUUID } from 'crypto';
 import { searchSchema } from '@/lib/validations';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { synthesizeResponses } from '@/lib/ai/synthesize';
@@ -40,7 +41,7 @@ function getDeviceType(req: NextRequest): string {
 
 export async function POST(req: NextRequest) {
   const start = Date.now();
-  const requestId = nanoid();
+  const requestId = randomUUID();
 
   let body: unknown;
   try {
@@ -68,8 +69,9 @@ export async function POST(req: NextRequest) {
 
   // ── Anonymous session ────────────────────────────────────────────────────────
   const existingSession = req.cookies.get(SESSION_COOKIE)?.value;
-  const sessionId = existingSession ?? nanoid();
-  const isNewSession = !existingSession;
+  const isValidUUID = existingSession && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existingSession);
+  const sessionId = isValidUUID ? existingSession : randomUUID();
+  const isNewSession = !isValidUUID;
 
   upsertAnonSession(sessionId, isNewSession, {
     deviceType: getDeviceType(req),
