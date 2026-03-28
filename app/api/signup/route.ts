@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendWelcomeEmail, sendSignupNotification } from '@/lib/email';
+import { checkEmailForSpam, isHoneypotTriggered } from '@/lib/spam-filter';
 
 function getClient() {
   const url = process.env.SUPABASE_URL;
@@ -12,18 +13,33 @@ function getClient() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, source } = body;
+    const { email, source, website } = body;
+
+    // Honeypot check — 'website' is a hidden field bots auto-fill
+    if (isHoneypotTriggered(website)) {
+      // Return success so bots think it worked, but do nothing
+      console.log(`[spam-filter] Honeypot triggered: ${email}`);
+      return NextResponse.json({ success: true });
+    }
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+
+    // Spam domain + pattern check
+    const spamCheck = checkEmailForSpam(normalizedEmail);
+    if (spamCheck.isSpam) {
+      // Return success so bots think it worked, but do nothing
+      console.log(`[spam-filter] Blocked signup: ${normalizedEmail} (${spamCheck.reason})`);
+      return NextResponse.json({ success: true });
+    }
+
     const supabase = getClient();
     let isNewSignup = true;
 
     if (supabase) {
-      // Check if already signed up — don't resend emails to existing users
       const { data: existing } = await supabase
         .from('email_signups')
         .select('email')
@@ -49,10 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (isNewSignup) {
-      // Send welcome email to new user
       await sendWelcomeEmail(normalizedEmail);
-
-      // Notify kelly@ of new signup
       await sendSignupNotification({
         email: normalizedEmail,
         signedUpAt: new Date().toISOString(),
