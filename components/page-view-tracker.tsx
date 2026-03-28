@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 export function PageViewTracker() {
   const pathname = usePathname();
-  const lastPath = useRef('');
 
   useEffect(() => {
-    if (pathname === lastPath.current) return;
-    lastPath.current = pathname;
+    // Only track once per browser session (tab open to tab close)
+    const key = 'wai_pv_tracked';
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
 
-    // Get session ID from cookie if available
     const sessionId = document.cookie
       .split('; ')
       .find((c) => c.startsWith('wai_session='))
@@ -25,7 +26,7 @@ export function PageViewTracker() {
         referrer: document.referrer || null,
         sessionId: sessionId || null,
       }),
-    }).catch(() => {}); // fire-and-forget
+    }).catch(() => {});
   }, [pathname]);
 
   return null;

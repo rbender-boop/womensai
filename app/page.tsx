@@ -231,7 +231,6 @@ export default function HomePage() {
         />
       )}
 
-      {/* Header */}
       <header style={{
         borderBottom: '1px solid rgba(212,167,185,0.25)',
         backdropFilter: 'blur(12px)',
@@ -253,12 +252,7 @@ export default function HomePage() {
               <button
                 onClick={() => setForceModal(true)}
                 className="text-sm font-semibold px-5 py-2.5 rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)',
-                  color: '#fff',
-                  boxShadow: '0 2px 14px rgba(139,48,88,0.28)',
-                  transition: 'box-shadow 0.2s',
-                }}
+                style={{ background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)', color: '#fff', boxShadow: '0 2px 14px rgba(139,48,88,0.28)', transition: 'box-shadow 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(139,48,88,0.4)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 2px 14px rgba(139,48,88,0.28)')}
               >
@@ -276,7 +270,7 @@ export default function HomePage() {
           <div className="hero-1 inline-flex items-center gap-2 text-xs font-medium px-5 py-2 rounded-full mb-4 sm:mb-5"
             style={{ background: 'rgba(155,65,99,0.07)', border: '1px solid rgba(155,65,99,0.18)', color: '#8B3058', letterSpacing: '0.3px' }}>
             <Sparkles size={11} />
-            ChatGPT &middot; Gemini &middot; Claude &middot; Grok &mdash; one compiled answer
+            {'ChatGPT \u00b7 Gemini \u00b7 Claude \u00b7 Grok \u2014 one compiled answer'}
           </div>
 
           <h1 className="hero-2 mb-3 sm:mb-4" style={{
@@ -295,7 +289,7 @@ export default function HomePage() {
           </h1>
 
           <p className="hero-3 mx-auto mb-4 sm:mb-5" style={{ fontSize: '15px', color: '#6B6560', maxWidth: '440px', lineHeight: 1.7, textAlign: 'center' }}>
-            Health. Fitness. Wellness. Beauty. Get the combined perspective of ChatGPT, Gemini, Claude, and Grok &mdash; compiled into one clear answer.
+            {'Health. Fitness. Wellness. Beauty. Get the combined perspective of ChatGPT, Gemini, Claude, and Grok \u2014 compiled into one clear answer.'}
           </p>
 
           <p className="hero-3 mb-6 sm:hidden" style={{
@@ -308,7 +302,6 @@ export default function HomePage() {
             Because one AI&apos;s opinion isn&apos;t enough for decisions that matter.
           </p>
 
-          {/* Search */}
           <div className="hero-4 w-full mx-auto" style={{ maxWidth: '620px' }}>
             <div style={{
               background: 'rgba(255,255,255,0.88)',
@@ -321,7 +314,7 @@ export default function HomePage() {
               <textarea
                 className="w-full px-6 pt-5 pb-3 text-base bg-transparent resize-none focus:outline-none leading-relaxed"
                 style={{ color: '#1C1714' }}
-                placeholder="Ask a health, fitness, wellness, or beauty question&hellip;"
+                placeholder={'Ask a health, fitness, wellness, or beauty question\u2026'}
                 rows={3}
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setError(''); setFollowupState('idle'); }}
@@ -333,12 +326,7 @@ export default function HomePage() {
                   onClick={() => handleSubmit(query)}
                   disabled={query.trim().length < 8 || followupState === 'loading'}
                   className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{
-                    background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)',
-                    color: '#fff',
-                    boxShadow: '0 4px 18px rgba(139,48,88,0.32)',
-                    transition: 'box-shadow 0.2s',
-                  }}
+                  style={{ background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)', color: '#fff', boxShadow: '0 4px 18px rgba(139,48,88,0.32)', transition: 'box-shadow 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 6px 24px rgba(139,48,88,0.44)')}
                   onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 18px rgba(139,48,88,0.32)')}
                 >
@@ -352,30 +340,15 @@ export default function HomePage() {
             {error && <p className="mt-2 text-sm" style={{ color: '#C0394F' }}>{error}</p>}
 
             {followupState !== 'idle' && (
-              <div
-                className="followup-in mt-3"
-                style={{
-                  background: 'rgba(255,255,255,0.92)',
-                  border: '1.5px solid rgba(212,167,185,0.5)',
-                  borderRadius: '20px',
-                  padding: '20px 22px',
-                  backdropFilter: 'blur(12px)',
-                }}
-              >
+              <div className="followup-in mt-3" style={{ background: 'rgba(255,255,255,0.92)', border: '1.5px solid rgba(212,167,185,0.5)', borderRadius: '20px', padding: '20px 22px', backdropFilter: 'blur(12px)' }}>
                 {followupState === 'loading' ? (
                   <div className="flex items-center gap-3">
-                    <div style={{
-                      width: '15px', height: '15px', borderRadius: '50%',
-                      border: '2px solid #9B4163', borderTopColor: 'transparent',
-                      animation: 'spin 0.7s linear infinite', flexShrink: 0,
-                    }} />
-                    <p className="text-sm" style={{ color: '#7A6E67' }}>Personalizing your questions&hellip;</p>
+                    <div style={{ width: '15px', height: '15px', borderRadius: '50%', border: '2px solid #9B4163', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite', flexShrink: 0 }} />
+                    <p className="text-sm" style={{ color: '#7A6E67' }}>{'Personalizing your questions\u2026'}</p>
                   </div>
                 ) : (
                   <>
-                    <p className="text-xs font-semibold uppercase mb-4" style={{ color: '#9B4163', letterSpacing: '2.5px' }}>
-                      Help us tailor your answer
-                    </p>
+                    <p className="text-xs font-semibold uppercase mb-4" style={{ color: '#9B4163', letterSpacing: '2.5px' }}>Help us tailor your answer</p>
                     <div className="space-y-4">
                       {followupQuestions.map((fq) => (
                         <div key={fq.id}>
@@ -398,7 +371,7 @@ export default function HomePage() {
                             <input type="text" value={followupAnswers[fq.id] || ''}
                               onChange={e => setFollowupAnswers(prev => ({ ...prev, [fq.id]: e.target.value }))}
                               onKeyDown={e => { if (e.key === 'Enter') handleFinalSubmit(); }}
-                              placeholder="Optional &mdash; leave blank to skip"
+                              placeholder={'Optional \u2014 leave blank to skip'}
                               className="w-full text-sm px-4 py-2.5 focus:outline-none"
                               style={{ background: 'rgba(253,245,248,0.8)', border: '1px solid rgba(212,167,185,0.4)', borderRadius: '12px', color: '#1C1714' }} />
                           )}
@@ -409,12 +382,12 @@ export default function HomePage() {
                       <button onClick={() => handleFinalSubmit()}
                         className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full"
                         style={{ background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)', color: '#fff', boxShadow: '0 4px 18px rgba(139,48,88,0.28)' }}>
-                        Get my answer &rarr;
+                        {'Get my answer \u2192'}
                       </button>
                       <button onClick={() => handleFinalSubmit(true)}
                         className="skip-btn flex items-center gap-1.5 text-sm font-semibold px-6 py-2.5 rounded-full"
                         style={{ background: 'transparent', color: '#7A6E67', border: '1.5px solid rgba(212,167,185,0.55)' }}>
-                        Skip &mdash; just get my answer
+                        {'Skip \u2014 just get my answer'}
                       </button>
                     </div>
                   </>
@@ -434,7 +407,7 @@ export default function HomePage() {
             </div>
 
             <p className="mt-5 text-xs" style={{ color: '#AFA8A2' }}>
-              5 free questions per day &middot; No account required &middot; Not medical advice &middot; Always consult your doctor
+              {'5 free questions per day \u00b7 No account required \u00b7 Not medical advice \u00b7 Always consult your doctor'}
             </p>
           </div>
         </section>
@@ -471,7 +444,7 @@ export default function HomePage() {
                 <>
                   <p className="text-xs font-semibold uppercase mb-5" style={{ color: '#9B4163', letterSpacing: '3px' }}>Free forever to start</p>
                   <h2 className="mb-4" style={{ fontFamily: 'var(--font-playfair)', fontSize: 'clamp(20px, 3vw, 30px)', fontWeight: 700, color: '#1C1714', lineHeight: 1.3 }}>
-                    Sign up free &mdash; the more you ask,<br />
+                    {'Sign up free \u2014 the more you ask,'}<br />
                     <em style={{ color: '#9B4163', fontStyle: 'italic' }}>the smarter and more personalized your answers get.</em>
                   </h2>
                   <p className="text-sm mb-8 mx-auto" style={{ color: '#7A6E67', maxWidth: '380px', lineHeight: 1.75 }}>
@@ -503,7 +476,7 @@ export default function HomePage() {
           <div className="flex items-center">
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#1C1714' }}>AskWomens</span>
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#8B3058', fontStyle: 'italic' }}>AI</span>
-            <a href="/admin" className="ml-2 text-xs" style={{ color: '#AFA8A2', textDecoration: 'none' }}>&copy; 2026</a>
+            <a href="/admin" className="ml-2 text-xs" style={{ color: '#AFA8A2', textDecoration: 'none' }}>{'\u00a9 2026'}</a>
           </div>
           <div className="flex items-center gap-6">
             <a href="/questions" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Questions</a>
