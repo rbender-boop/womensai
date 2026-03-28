@@ -5,12 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Sparkles, CheckCheck, GitFork, AlignLeft, AlertCircle,
   RotateCcw, Home, Mail, X, Copy, Check, BookmarkPlus,
-  ChevronDown, ChevronRight, Send, Share2,
+  ChevronDown, ChevronRight, Send, Share2, ArrowLeft,
 } from 'lucide-react';
 import type { ProviderResult, CompiledResult } from '@/types/search';
 import { AuthGateModal } from '@/components/auth-gate-modal';
 
-// \u2500\u2500 Types \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 interface ThreadEntry {
   id: string;
   displayQuestion: string;
@@ -30,7 +29,6 @@ function emptyEntry(id: string, dq: string): ThreadEntry {
   return { id, displayQuestion: dq, providers: [], rawStream: '', bestAnswer: '', consensus: [], disagreements: [], notes: '', status: 'loading' };
 }
 
-// \u2500\u2500 Helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function extractBestAnswer(raw: string): string {
   let t = raw;
   const p = t.match(/^BEST_ANSWER:\s*/i);
@@ -40,7 +38,6 @@ function extractBestAnswer(raw: string): string {
   return t.trim();
 }
 
-// \u2500\u2500 Lightweight markdown for Best Answer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function FormattedAnswer({ text, streaming }: { text: string; streaming?: boolean }) {
   const paragraphs = text.split(/\n\n+/).filter(Boolean);
   return (
@@ -69,7 +66,6 @@ function FormattedAnswer({ text, streaming }: { text: string; streaming?: boolea
   );
 }
 
-// \u2500\u2500 Style maps \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 const PROVIDER_STYLES: Record<string, { bg: string; border: string; text: string; dot: string }> = {
   chatgpt: { bg: '#EFF6EF', border: '#C2D9C0', text: '#2F6B2B', dot: '#4A9645' },
   gemini:  { bg: '#EBF0F8', border: '#B8CCE2', text: '#264F7A', dot: '#3B76B0' },
@@ -84,7 +80,13 @@ const AI_CARDS = [
   { label: 'Grok',    color: '#5E2F85', bg: '#F3EEF8', border: '#D4BEED', dot: '#8B4CBF', delay: '1.05s' },
 ];
 
-// \u2500\u2500 Collapsible section \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+const SOCIALS = [
+  { id: 'twitter',  label: '\ud835\udd4f', name: 'Twitter / X', bg: '#000',    color: '#fff' },
+  { id: 'whatsapp', label: '\ud83d\udcac', name: 'WhatsApp',   bg: '#25D366', color: '#fff' },
+  { id: 'facebook', label: 'f',             name: 'Facebook',   bg: '#1877F2', color: '#fff' },
+  { id: 'linkedin', label: 'in',            name: 'LinkedIn',   bg: '#0077B5', color: '#fff' },
+];
+
 function Collapsible({ title, icon, count, children }: { title: string; icon: React.ReactNode; count: number; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   if (count === 0) return null;
@@ -101,7 +103,6 @@ function Collapsible({ title, icon, count, children }: { title: string; icon: Re
   );
 }
 
-// \u2500\u2500 Raw responses (collapsible with tabs) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function RawResponses({ providers }: { providers: ProviderResult[] }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState(() => providers.find(p => p.status === 'success')?.provider || 'chatgpt');
@@ -152,7 +153,6 @@ function RawResponses({ providers }: { providers: ProviderResult[] }) {
   );
 }
 
-// \u2500\u2500 Modal shell \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(30,20,25,0.5)' }}
@@ -168,7 +168,6 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
-// \u2500\u2500 Main page \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 export default function ResultsPage() {
   const params = useSearchParams();
   const router = useRouter();
@@ -180,17 +179,14 @@ export default function ResultsPage() {
   const initialized = useRef(false);
   const threadEndRef = useRef<HTMLDivElement>(null);
 
-  // Share state
   const [shareSlug, setShareSlug] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Auth
   const [user, setUser] = useState<{ id: string; firstName: string; email: string } | null>(null);
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
-  // Modals
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [emailSelf, setEmailSelf] = useState('');
   const [emailFriend, setEmailFriend] = useState('');
@@ -203,7 +199,6 @@ export default function ResultsPage() {
     try { const s = localStorage.getItem('wai_user'); if (s) setUser(JSON.parse(s)); } catch {}
   }, []);
 
-  // \u2500\u2500 Stream a search \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   const addEntry = useCallback(async (q: string, dq: string) => {
     const entryId = crypto.randomUUID();
     setThread((prev) => [...prev, emptyEntry(entryId, dq)]);
@@ -280,7 +275,6 @@ export default function ResultsPage() {
     }
   }, []);
 
-  // Init first entry
   useEffect(() => {
     if (query && !initialized.current) {
       initialized.current = true;
@@ -288,12 +282,10 @@ export default function ResultsPage() {
     }
   }, [query, displayQuery, addEntry]);
 
-  // Auto-scroll
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [thread]);
 
-  // \u2500\u2500 Follow-up \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   function handleFollowUp() {
     const t = followUp.trim();
     if (!t || t.length < 8) return;
@@ -301,7 +293,6 @@ export default function ResultsPage() {
     setFollowUp('');
   }
 
-  // \u2500\u2500 Share helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   const latestDone = [...thread].reverse().find((e) => e.status === 'done');
 
   async function getShareUrl(): Promise<string> {
@@ -337,7 +328,7 @@ export default function ResultsPage() {
   async function handleSocialShare(platform: string) {
     const url = await getShareUrl();
     const dq = latestDone?.displayQuestion || displayQuery;
-    const text = `I asked ChatGPT, Gemini, Claude & Grok: "${dq.slice(0, 80)}" \u2014 here's what they said:`;
+    const text = `I asked ChatGPT, Gemini, Claude & Grok: "${dq.slice(0, 80)}" \u2014 here\u2019s what they said:`;
     const eu = encodeURIComponent(url);
     const et = encodeURIComponent(text);
     const links: Record<string, string> = {
@@ -349,7 +340,6 @@ export default function ResultsPage() {
     window.open(links[platform], '_blank', 'noopener,noreferrer');
   }
 
-  // \u2500\u2500 Email helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   async function handleSendEmail(type: 'self' | 'friend') {
     const to = type === 'self' ? emailSelf : emailFriend;
     if (!to || !to.includes('@')) return;
@@ -385,28 +375,31 @@ export default function ResultsPage() {
 
   const anyLoading = thread.some((e) => e.status === 'loading' || e.status === 'streaming');
 
-  // \u2500\u2500 Render \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#FBF8F5' }}>
       <style>{`
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
       `}</style>
 
-      {/* Progress bar */}
       {anyLoading && (
         <div className="fixed top-0 left-0 w-full z-50 overflow-hidden" style={{ height: '3px', background: '#F0E9E1' }}>
           <div className="h-full" style={{ background: 'linear-gradient(90deg, #F7ECF0, #9B4163, #C97A9A, #9B4163)', backgroundSize: '200% 100%', animation: 'progressSlide 1.8s ease-in-out infinite', width: '50%' }} />
         </div>
       )}
 
-      {/* Header */}
+      {/* Header with back button */}
       <header className="bg-white px-6 py-4 sticky top-0 z-10" style={{ borderBottom: '1px solid #EDE8E3' }}>
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-          <button onClick={() => router.push('/')} className="flex items-center gap-2" style={{ color: '#7A6E67' }}>
-            <Home size={15} />
-            <span className="font-serif font-bold" style={{ color: '#1C1714' }}>AskWomens</span>
-            <span className="font-serif font-bold" style={{ color: '#9B4163' }}>AI</span>
-          </button>
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.push('/')} className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors" style={{ color: '#7A6E67', background: '#FAF7F5', border: '1px solid #EDE8E3' }}>
+              <ArrowLeft size={14} />
+              Back
+            </button>
+            <button onClick={() => router.push('/')} className="flex items-center gap-0.5">
+              <span className="font-serif font-bold" style={{ color: '#1C1714' }}>AskWomens</span>
+              <span className="font-serif font-bold" style={{ color: '#9B4163' }}>AI</span>
+            </button>
+          </div>
           <button onClick={() => router.push('/')} className="flex items-center gap-1.5 text-sm" style={{ color: '#7A6E67' }}>
             <RotateCcw size={13} /> New question
           </button>
@@ -421,14 +414,14 @@ export default function ResultsPage() {
 
           return (
             <div key={entry.id} className="space-y-3">
-              {/* Question */}
+              {/* Question bubble */}
               <div className="flex justify-end">
                 <div className="rounded-2xl rounded-br-md px-5 py-3 max-w-[85%]" style={{ background: '#F7ECF0', border: '1px solid #E8C4D0' }}>
                   <p className="text-sm font-medium" style={{ color: '#1C1714' }}>{entry.displayQuestion}</p>
                 </div>
               </div>
 
-              {/* Loading state */}
+              {/* Loading */}
               {entry.status === 'loading' && (
                 <div className="bg-white rounded-2xl p-5" style={{ border: '1px solid #EDE8E3' }}>
                   <p className="text-xs font-medium uppercase tracking-widest mb-4 text-center" style={{ color: '#AFA8A2' }}>Querying all four AIs\u2026</p>
@@ -444,7 +437,7 @@ export default function ResultsPage() {
                 </div>
               )}
 
-              {/* Error state */}
+              {/* Error */}
               {entry.status === 'error' && (
                 <div className="flex items-start gap-3 rounded-2xl p-5" style={{ background: '#FDF0F2', border: '1px solid #F0BECA' }}>
                   <AlertCircle size={17} className="shrink-0 mt-0.5" style={{ color: '#C0394F' }} />
@@ -455,10 +448,9 @@ export default function ResultsPage() {
                 </div>
               )}
 
-              {/* Answer card (streaming or done) */}
+              {/* Answer card */}
               {(entry.status === 'streaming' || entry.status === 'done') && (
                 <div className="bg-white rounded-2xl p-5" style={{ border: '1px solid #EDE8E3' }}>
-                  {/* Best Answer header */}
                   <div className="flex items-center gap-2.5 mb-4">
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: '#9B4163' }}>
                       <Sparkles size={12} style={{ color: '#fff' }} />
@@ -469,10 +461,8 @@ export default function ResultsPage() {
                     </span>
                   </div>
 
-                  {/* Best Answer body */}
                   <FormattedAnswer text={displayBa} streaming={entry.status === 'streaming'} />
 
-                  {/* Collapsible sections (only when done) */}
                   {entry.status === 'done' && (
                     <div className="mt-4">
                       <Collapsible
@@ -483,7 +473,7 @@ export default function ResultsPage() {
                         <ul className="space-y-2">
                           {entry.consensus.map((item, i) => (
                             <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: '#7A6E67' }}>
-                              <span className="mt-0.5 shrink-0 text-xs" style={{ color: '#4A9645' }}>\u2713</span>
+                              <span className="mt-0.5 shrink-0 text-xs" style={{ color: '#4A9645' }}>{'\u2713'}</span>
                               {item}
                             </li>
                           ))}
@@ -498,7 +488,7 @@ export default function ResultsPage() {
                         <ul className="space-y-2">
                           {entry.disagreements.map((item, i) => (
                             <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: '#7A6E67' }}>
-                              <span className="mt-0.5 shrink-0" style={{ color: '#B08030' }}>\u2260</span>
+                              <span className="mt-0.5 shrink-0" style={{ color: '#B08030' }}>{'\u2260'}</span>
                               {item}
                             </li>
                           ))}
@@ -512,35 +502,47 @@ export default function ResultsPage() {
                       )}
                     </div>
                   )}
+                </div>
+              )}
 
-                  {/* Action row (only latest done entry) */}
-                  {entry.status === 'done' && isLatest && (
-                    <div className="flex items-center gap-2 mt-4 pt-3 flex-wrap" style={{ borderTop: '1px solid #EDE8E3' }}>
-                      <button onClick={handleCopyLink} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors" style={{ background: '#FAF7F5', border: '1px solid #EDE8E3', color: '#4A4540' }}>
-                        {copied ? <Check size={11} /> : <Copy size={11} />}
-                        {copied ? 'Copied!' : 'Copy link'}
+              {/* Share & Actions card (prominent, separate card below answer) */}
+              {entry.status === 'done' && isLatest && (
+                <div className="bg-white rounded-2xl p-5" style={{ border: '1px solid #EDE8E3' }}>
+                  <p className="text-xs font-medium uppercase tracking-widest mb-3" style={{ color: '#9B4163', letterSpacing: '2px' }}>Share this answer</p>
+                  <div className="flex gap-2 mb-4 flex-wrap">
+                    {SOCIALS.map(({ id, label, name, bg, color }) => (
+                      <button
+                        key={id}
+                        onClick={() => handleSocialShare(id)}
+                        className="flex items-center gap-2 rounded-xl text-xs font-semibold py-2.5 px-4 transition-opacity"
+                        style={{ background: bg, color, opacity: shareLoading ? 0.6 : 1 }}
+                      >
+                        <span>{label}</span>
+                        <span>{name}</span>
                       </button>
-                      <button onClick={() => handleSocialShare('twitter')} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: '#FAF7F5', border: '1px solid #EDE8E3', color: '#4A4540' }}>
-                        <Share2 size={11} /> Share
-                      </button>
-                      <button onClick={() => openModal('email-self')} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: '#FAF7F5', border: '1px solid #EDE8E3', color: '#4A4540' }}>
-                        <Mail size={11} /> Email me
-                      </button>
-                      <button onClick={handleEmailFriendClick} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: '#F7ECF0', border: '1px solid #E8C4D0', color: '#9B4163' }}>
-                        <Mail size={11} /> Email a friend
-                      </button>
-                      <button onClick={() => openModal('save')} className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: '#F7ECF0', border: '1px solid #E8C4D0', color: '#9B4163' }}>
-                        <BookmarkPlus size={11} /> Save
-                      </button>
-                    </div>
-                  )}
+                    ))}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={handleEmailFriendClick} className="flex items-center gap-2 text-sm font-medium py-2.5 px-4 rounded-xl" style={{ background: '#F7ECF0', color: '#9B4163', border: '1px solid #E8C4D0' }}>
+                      <Mail size={14} /> Email a friend
+                    </button>
+                    <button onClick={() => openModal('email-self')} className="flex items-center gap-2 text-sm font-medium py-2.5 px-4 rounded-xl" style={{ background: '#FAF7F5', color: '#4A4540', border: '1px solid #EDE8E3' }}>
+                      <Mail size={14} /> Email me this
+                    </button>
+                    <button onClick={handleCopyLink} className="flex items-center gap-2 text-sm font-medium py-2.5 px-4 rounded-xl" style={{ background: '#FAF7F5', color: '#4A4540', border: '1px solid #EDE8E3' }}>
+                      {copied ? <Check size={14} /> : <Copy size={14} />}
+                      {copied ? 'Copied!' : 'Copy link'}
+                    </button>
+                    <button onClick={() => openModal('save')} className="flex items-center gap-2 text-sm font-medium py-2.5 px-4 rounded-xl" style={{ background: '#F7ECF0', color: '#9B4163', border: '1px solid #E8C4D0' }}>
+                      <BookmarkPlus size={14} /> Save
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           );
         })}
 
-        {/* Disclaimer (after first completed entry) */}
         {latestDone && (
           <div className="rounded-2xl px-5 py-3 text-xs leading-relaxed" style={{ background: '#F7ECF0', border: '1px solid #E8C4D0', color: '#7A3050' }}>
             <strong>Important:</strong> AI responses are for informational purposes only. Not medical advice. Always consult a qualified healthcare provider.
@@ -578,7 +580,6 @@ export default function ResultsPage() {
         </div>
       )}
 
-      {/* \u2500\u2500 Modals \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */}
       {showAuthGate && (
         <AuthGateModal
           onClose={() => { setShowAuthGate(false); setPendingAction(null); }}
@@ -590,7 +591,7 @@ export default function ResultsPage() {
         <Modal title="Email me this answer" onClose={() => setActiveModal(null)}>
           {emailStatus === 'sent' ? (
             <div className="text-center py-4">
-              <p className="text-3xl mb-3">\u2713</p>
+              <p className="text-3xl mb-3">{'\u2713'}</p>
               <p className="font-medium" style={{ color: '#1C1714' }}>Sent!</p>
               <p className="text-sm mt-1" style={{ color: '#AFA8A2' }}>Check your inbox.</p>
               <button onClick={() => setActiveModal(null)} className="mt-4 text-sm underline" style={{ color: '#9B4163' }}>Close</button>
@@ -615,7 +616,7 @@ export default function ResultsPage() {
         <Modal title="Email this to a friend" onClose={() => setActiveModal(null)}>
           {emailStatus === 'sent' ? (
             <div className="text-center py-4">
-              <p className="text-3xl mb-3">\u2713</p>
+              <p className="text-3xl mb-3">{'\u2713'}</p>
               <p className="font-medium" style={{ color: '#1C1714' }}>Sent!</p>
               <button onClick={() => setActiveModal(null)} className="mt-4 text-sm underline" style={{ color: '#9B4163' }}>Close</button>
             </div>
@@ -642,7 +643,7 @@ export default function ResultsPage() {
         <Modal title="Save your answers" onClose={() => setActiveModal(null)}>
           {saveStatus === 'sent' ? (
             <div className="text-center py-4">
-              <p className="text-3xl mb-3">\u2713</p>
+              <p className="text-3xl mb-3">{'\u2713'}</p>
               <p className="font-medium" style={{ color: '#1C1714' }}>You&apos;re on the list!</p>
               <p className="text-sm mt-1" style={{ color: '#AFA8A2' }}>We&apos;ll let you know when saved history is live.</p>
               <button onClick={() => setActiveModal(null)} className="mt-4 text-sm underline" style={{ color: '#9B4163' }}>Close</button>
@@ -658,7 +659,7 @@ export default function ResultsPage() {
                 className="w-full text-sm px-3.5 py-2.5 rounded-xl outline-none mb-4" style={{ border: '1px solid #EDE8E3', background: '#FAF7F5' }} />
               <button onClick={handleSaveSignup} disabled={saveStatus === 'sending'}
                 className="w-full py-3 rounded-xl text-sm font-semibold" style={{ background: '#9B4163', color: '#fff', opacity: saveStatus === 'sending' ? 0.7 : 1 }}>
-                {saveStatus === 'sending' ? 'Saving\u2026' : 'Notify me when it\'s ready'}
+                {saveStatus === 'sending' ? 'Saving\u2026' : "Notify me when it's ready"}
               </button>
             </>
           )}
