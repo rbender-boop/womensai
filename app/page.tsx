@@ -222,6 +222,8 @@ export default function HomePage() {
         .followup-in { animation: floatIn 0.35s ease both; }
         .age-chip { transition: all 0.15s ease; cursor: pointer; }
         .age-chip:hover { border-color: #9B4163 !important; color: #9B4163 !important; }
+        .skip-btn { transition: all 0.18s ease; }
+        .skip-btn:hover { background: rgba(155,65,99,0.06) !important; border-color: #9B4163 !important; color: #9B4163 !important; }
       `}</style>
 
       {activeVariant && (
@@ -432,7 +434,7 @@ export default function HomePage() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex items-center gap-4 mt-5">
+                    <div className="flex items-center gap-3 mt-5">
                       <button
                         onClick={() => handleFinalSubmit()}
                         className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full"
@@ -446,10 +448,14 @@ export default function HomePage() {
                       </button>
                       <button
                         onClick={() => handleFinalSubmit(true)}
-                        className="text-sm"
-                        style={{ color: '#AFA8A2' }}
+                        className="skip-btn flex items-center gap-1.5 text-sm font-semibold px-6 py-2.5 rounded-full"
+                        style={{
+                          background: 'transparent',
+                          color: '#7A6E67',
+                          border: '1.5px solid rgba(212,167,185,0.55)',
+                        }}
                       >
-                        Skip
+                        Skip — just get my answer
                       </button>
                     </div>
                   </>

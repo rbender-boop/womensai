@@ -46,9 +46,10 @@ export async function POST(req: NextRequest) {
     if (!query || query.length < 4) return NextResponse.json({ questions: [] });
 
     const questions: FollowupQuestion[] = [];
+    const ageRelevant = isAgeRelevant(query);
 
-    // Always inject age first when the topic benefits from it
-    if (isAgeRelevant(query)) {
+    // Inject age first when the topic benefits from it
+    if (ageRelevant) {
       questions.push({
         id: 'age',
         question: 'What is your age range?',
@@ -57,8 +58,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Get 1-2 additional AI-generated contextual questions
-    const maxAiQuestions = questions.length > 0 ? 2 : 3;
+    // Max 2 total questions: age counts as 1, so AI generates 1 or 2
+    const maxAiQuestions = ageRelevant ? 1 : 2;
 
     try {
       const completion = await openai.chat.completions.create({
@@ -73,11 +74,11 @@ export async function POST(req: NextRequest) {
               `Return ONLY a valid JSON array of ${maxAiQuestions} short, conversational questions. ` +
               'Do NOT ask about age — that is already handled. ' +
               'No preamble, no explanation, no markdown fences. ' +
-              'Example output: ["Are you currently taking any medications?","How many hours of sleep do you typically get?"]',
+              'Example output: ["Are you currently taking any medications?"]',
           },
           {
             role: 'user',
-            content: `Question: "${query}"\n\nGenerate ${maxAiQuestions} follow-up questions that would meaningfully personalize the answer for her specific situation. Do not ask about age.`,
+            content: `Question: "${query}"\n\nGenerate ${maxAiQuestions} follow-up question${maxAiQuestions === 1 ? '' : 's'} that would meaningfully personalize the answer for her specific situation. Do not ask about age.`,
           },
         ],
       });
@@ -93,7 +94,6 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       console.error('[FollowupQuestions] AI error:', err);
-      // Age question still returns even if AI call fails
     }
 
     return NextResponse.json({ questions });
