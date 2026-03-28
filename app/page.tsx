@@ -276,7 +276,7 @@ export default function HomePage() {
           <div className="hero-1 inline-flex items-center gap-2 text-xs font-medium px-5 py-2 rounded-full mb-4 sm:mb-5"
             style={{ background: 'rgba(155,65,99,0.07)', border: '1px solid rgba(155,65,99,0.18)', color: '#8B3058', letterSpacing: '0.3px' }}>
             <Sparkles size={11} />
-            ChatGPT \u00b7 Gemini \u00b7 Claude \u00b7 Grok \u2014 one compiled answer
+            ChatGPT &middot; Gemini &middot; Claude &middot; Grok &mdash; one compiled answer
           </div>
 
           <h1 className="hero-2 mb-3 sm:mb-4" style={{
@@ -295,7 +295,7 @@ export default function HomePage() {
           </h1>
 
           <p className="hero-3 mx-auto mb-4 sm:mb-5" style={{ fontSize: '15px', color: '#6B6560', maxWidth: '440px', lineHeight: 1.7, textAlign: 'center' }}>
-            Health. Fitness. Wellness. Beauty. Get the combined perspective of ChatGPT, Gemini, Claude, and Grok \u2014 compiled into one clear answer.
+            Health. Fitness. Wellness. Beauty. Get the combined perspective of ChatGPT, Gemini, Claude, and Grok &mdash; compiled into one clear answer.
           </p>
 
           <p className="hero-3 mb-6 sm:hidden" style={{
@@ -321,7 +321,7 @@ export default function HomePage() {
               <textarea
                 className="w-full px-6 pt-5 pb-3 text-base bg-transparent resize-none focus:outline-none leading-relaxed"
                 style={{ color: '#1C1714' }}
-                placeholder="Ask a health, fitness, wellness, or beauty question\u2026"
+                placeholder="Ask a health, fitness, wellness, or beauty question&hellip;"
                 rows={3}
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setError(''); setFollowupState('idle'); }}
@@ -369,7 +369,7 @@ export default function HomePage() {
                       border: '2px solid #9B4163', borderTopColor: 'transparent',
                       animation: 'spin 0.7s linear infinite', flexShrink: 0,
                     }} />
-                    <p className="text-sm" style={{ color: '#7A6E67' }}>Personalizing your questions\u2026</p>
+                    <p className="text-sm" style={{ color: '#7A6E67' }}>Personalizing your questions&hellip;</p>
                   </div>
                 ) : (
                   <>
@@ -398,7 +398,7 @@ export default function HomePage() {
                             <input type="text" value={followupAnswers[fq.id] || ''}
                               onChange={e => setFollowupAnswers(prev => ({ ...prev, [fq.id]: e.target.value }))}
                               onKeyDown={e => { if (e.key === 'Enter') handleFinalSubmit(); }}
-                              placeholder="Optional \u2014 leave blank to skip"
+                              placeholder="Optional &mdash; leave blank to skip"
                               className="w-full text-sm px-4 py-2.5 focus:outline-none"
                               style={{ background: 'rgba(253,245,248,0.8)', border: '1px solid rgba(212,167,185,0.4)', borderRadius: '12px', color: '#1C1714' }} />
                           )}
@@ -409,12 +409,12 @@ export default function HomePage() {
                       <button onClick={() => handleFinalSubmit()}
                         className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full"
                         style={{ background: 'linear-gradient(135deg, #9B4163 0%, #7A3050 100%)', color: '#fff', boxShadow: '0 4px 18px rgba(139,48,88,0.28)' }}>
-                        Get my answer \u2192
+                        Get my answer &rarr;
                       </button>
                       <button onClick={() => handleFinalSubmit(true)}
                         className="skip-btn flex items-center gap-1.5 text-sm font-semibold px-6 py-2.5 rounded-full"
                         style={{ background: 'transparent', color: '#7A6E67', border: '1.5px solid rgba(212,167,185,0.55)' }}>
-                        Skip \u2014 just get my answer
+                        Skip &mdash; just get my answer
                       </button>
                     </div>
                   </>
@@ -434,7 +434,7 @@ export default function HomePage() {
             </div>
 
             <p className="mt-5 text-xs" style={{ color: '#AFA8A2' }}>
-              5 free questions per day \u00b7 No account required \u00b7 Not medical advice \u00b7 Always consult your doctor
+              5 free questions per day &middot; No account required &middot; Not medical advice &middot; Always consult your doctor
             </p>
           </div>
         </section>
@@ -445,7 +445,7 @@ export default function HomePage() {
 
         <section id="why-different" className="w-full max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase mb-4" style={{ color: '#9B4163', letterSpacing: '3.5px' }}>One AI isn&apos;t enough</p>
+            <p className="text-xs font-semibold uppercase mb-4" style={{ color: '#9B4163', letterSpacing: '3.5px' }}>When One AI&apos;s Opinion Just Isn&apos;t Enough</p>
             <h2 style={{ fontFamily: 'var(--font-playfair)', fontSize: 'clamp(32px, 5vw, 54px)', fontWeight: 700, color: '#1C1714', lineHeight: 1.12 }}>
               Why we&apos;re{' '}<em style={{ color: '#9B4163', fontStyle: 'italic' }}>different.</em>
             </h2>
@@ -463,7 +463,7 @@ export default function HomePage() {
             <div style={{ borderRadius: '32px', padding: '56px 48px', textAlign: 'center', background: 'linear-gradient(145deg, rgba(155,65,99,0.08) 0%, rgba(122,48,80,0.12) 100%)', border: '1.5px solid rgba(212,167,185,0.45)', backdropFilter: 'blur(12px)' }}>
               {stripDone ? (
                 <>
-                  <p style={{ fontSize: '32px', marginBottom: '12px' }}>\u2736</p>
+                  <p style={{ fontSize: '32px', marginBottom: '12px' }}>{'\u2736'}</p>
                   <p style={{ fontFamily: 'var(--font-playfair)', fontSize: '24px', fontWeight: 700, color: '#1C1714' }}>You&apos;re in.</p>
                   <p className="mt-2 text-sm" style={{ color: '#7A6E67' }}>The more you ask, the smarter your answers get.</p>
                 </>
@@ -471,7 +471,7 @@ export default function HomePage() {
                 <>
                   <p className="text-xs font-semibold uppercase mb-5" style={{ color: '#9B4163', letterSpacing: '3px' }}>Free forever to start</p>
                   <h2 className="mb-4" style={{ fontFamily: 'var(--font-playfair)', fontSize: 'clamp(20px, 3vw, 30px)', fontWeight: 700, color: '#1C1714', lineHeight: 1.3 }}>
-                    Sign up free \u2014 the more you ask,<br />
+                    Sign up free &mdash; the more you ask,<br />
                     <em style={{ color: '#9B4163', fontStyle: 'italic' }}>the smarter and more personalized your answers get.</em>
                   </h2>
                   <p className="text-sm mb-8 mx-auto" style={{ color: '#7A6E67', maxWidth: '380px', lineHeight: 1.75 }}>
@@ -503,7 +503,7 @@ export default function HomePage() {
           <div className="flex items-center">
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#1C1714' }}>AskWomens</span>
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#8B3058', fontStyle: 'italic' }}>AI</span>
-            <a href="/admin" className="ml-2 text-xs" style={{ color: '#AFA8A2', textDecoration: 'none' }}>\u00a9 2026</a>
+            <a href="/admin" className="ml-2 text-xs" style={{ color: '#AFA8A2', textDecoration: 'none' }}>&copy; 2026</a>
           </div>
           <div className="flex items-center gap-6">
             <a href="/questions" style={{ fontSize: '12px', transition: 'color 0.15s' }}>Questions</a>
