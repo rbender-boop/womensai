@@ -28,7 +28,6 @@ export async function GET(req: NextRequest) {
   const offset = (page - 1) * limit;
 
   try {
-    // ── email_signups is the primary user table ──────────
     let query = supabase
       .from('email_signups')
       .select('*', { count: 'exact' });
@@ -41,14 +40,8 @@ export async function GET(req: NextRequest) {
       .order(sortBy, { ascending: sortDir })
       .range(offset, offset + limit - 1);
 
-    // ── For each signup, get their question stats ────────
-    // We join via anonymous_sessions linked to search_requests
-    // But since we may not have a direct FK, we'll get
-    // question categories from search_requests where the
-    // session can be inferred. For now, get overall stats.
     const enriched = await Promise.all(
       (signups || []).map(async (signup: Record<string, unknown>) => {
-        // Check if they exist in the users table
         const { data: userRow } = await supabase
           .from('users')
           .select('id, age_range, life_stage, question_count, tier, anonymous_session_id')
@@ -59,7 +52,6 @@ export async function GET(req: NextRequest) {
         let questionCount = 0;
 
         if (userRow?.anonymous_session_id) {
-          // Get their question categories
           const { data: qs } = await supabase
             .from('search_requests')
             .select('category')
@@ -97,5 +89,48 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error('Admin users error:', err);
     return NextResponse.json({ error: 'Failed to load users' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  if (!isAdminAuthenticatedFromRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const supabase = getClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'DB not configured' }, { status: 500 });
+  }
+
+  try {
+    const { email } = await req.json();
+    if (!email) {
+      return NextResponse.json({ error: 'Email required' }, { status: 400 });
+    }
+
+    // Delete from email_signups
+    const { error: signupErr } = await supabase
+      .from('email_signups')
+      .delete()
+      .eq('email', email);
+
+    if (signupErr) {
+      console.error('Delete signup error:', signupErr);
+    }
+
+    // Delete from users table if exists
+    const { error: userErr } = await supabase
+      .from('users')
+      .delete()
+      .eq('email', email);
+
+    if (userErr) {
+      console.error('Delete user error:', userErr);
+    }
+
+    return NextResponse.json({ ok: true, deleted: email });
+  } catch (err) {
+    console.error('Admin delete user error:', err);
+    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }

@@ -20,13 +20,12 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const range = searchParams.get('range') || '7'; // days
+  const range = searchParams.get('range') || '7';
   const days = parseInt(range, 10) || 7;
   const since = new Date(Date.now() - days * 86400000).toISOString();
-  const allTimeSince = '2020-01-01T00:00:00Z';
 
   try {
-    // ── KPIs ──────────────────────────────────────────────
+    // KPIs
     const [pvAll, pvRange, questionsAll, questionsRange, sharesAll, sharesRange, signupsAll, signupsRange] = await Promise.all([
       supabase.from('page_views').select('id', { count: 'exact', head: true }),
       supabase.from('page_views').select('id', { count: 'exact', head: true }).gte('created_at', since),
@@ -38,13 +37,12 @@ export async function GET(req: NextRequest) {
       supabase.from('email_signups').select('id', { count: 'exact', head: true }).gte('signed_up_at', since),
     ]);
 
-    // ── Daily breakdown for sparklines ────────────────────
+    // Daily breakdown
     const dailyQuestions: Record<string, number> = {};
     const dailyViews: Record<string, number> = {};
     const dailyShares: Record<string, number> = {};
     const dailySignups: Record<string, number> = {};
 
-    // Initialize days
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
       dailyQuestions[d] = 0;
@@ -53,106 +51,54 @@ export async function GET(req: NextRequest) {
       dailySignups[d] = 0;
     }
 
-    // Questions per day
-    const { data: qByDay } = await supabase
-      .from('search_requests')
-      .select('created_at')
-      .gte('created_at', since)
-      .order('created_at', { ascending: true });
-    (qByDay || []).forEach((r: { created_at: string }) => {
-      const d = r.created_at.slice(0, 10);
-      if (dailyQuestions[d] !== undefined) dailyQuestions[d]++;
-    });
+    const { data: qByDay } = await supabase.from('search_requests').select('created_at').gte('created_at', since).order('created_at', { ascending: true });
+    (qByDay || []).forEach((r: { created_at: string }) => { const d = r.created_at.slice(0, 10); if (dailyQuestions[d] !== undefined) dailyQuestions[d]++; });
 
-    // Views per day
-    const { data: vByDay } = await supabase
-      .from('page_views')
-      .select('created_at')
-      .gte('created_at', since)
-      .order('created_at', { ascending: true });
-    (vByDay || []).forEach((r: { created_at: string }) => {
-      const d = r.created_at.slice(0, 10);
-      if (dailyViews[d] !== undefined) dailyViews[d]++;
-    });
+    const { data: vByDay } = await supabase.from('page_views').select('created_at').gte('created_at', since).order('created_at', { ascending: true });
+    (vByDay || []).forEach((r: { created_at: string }) => { const d = r.created_at.slice(0, 10); if (dailyViews[d] !== undefined) dailyViews[d]++; });
 
-    // Shares per day
-    const { data: sByDay } = await supabase
-      .from('share_events')
-      .select('created_at')
-      .gte('created_at', since)
-      .order('created_at', { ascending: true });
-    (sByDay || []).forEach((r: { created_at: string }) => {
-      const d = r.created_at.slice(0, 10);
-      if (dailyShares[d] !== undefined) dailyShares[d]++;
-    });
+    const { data: sByDay } = await supabase.from('share_events').select('created_at').gte('created_at', since).order('created_at', { ascending: true });
+    (sByDay || []).forEach((r: { created_at: string }) => { const d = r.created_at.slice(0, 10); if (dailyShares[d] !== undefined) dailyShares[d]++; });
 
-    // Signups per day
-    const { data: suByDay } = await supabase
-      .from('email_signups')
-      .select('signed_up_at')
-      .gte('signed_up_at', since)
-      .order('signed_up_at', { ascending: true });
-    (suByDay || []).forEach((r: { signed_up_at: string }) => {
-      const d = r.signed_up_at.slice(0, 10);
-      if (dailySignups[d] !== undefined) dailySignups[d]++;
-    });
+    const { data: suByDay } = await supabase.from('email_signups').select('signed_up_at').gte('signed_up_at', since).order('signed_up_at', { ascending: true });
+    (suByDay || []).forEach((r: { signed_up_at: string }) => { const d = r.signed_up_at.slice(0, 10); if (dailySignups[d] !== undefined) dailySignups[d]++; });
 
-    // ── Category breakdown ───────────────────────────────
-    const { data: catData } = await supabase
-      .from('search_requests')
-      .select('category')
-      .gte('created_at', since)
-      .not('category', 'is', null);
+    // Category breakdown
+    const { data: catData } = await supabase.from('search_requests').select('category').gte('created_at', since).not('category', 'is', null);
     const categoryBreakdown: Record<string, number> = {};
-    (catData || []).forEach((r: { category: string }) => {
-      categoryBreakdown[r.category] = (categoryBreakdown[r.category] || 0) + 1;
-    });
+    (catData || []).forEach((r: { category: string }) => { categoryBreakdown[r.category] = (categoryBreakdown[r.category] || 0) + 1; });
 
-    // ── Top topics ───────────────────────────────────────
-    const { data: topicData } = await supabase
-      .from('search_requests')
-      .select('primary_topic')
-      .gte('created_at', since)
-      .not('primary_topic', 'is', null);
+    // Top topics
+    const { data: topicData } = await supabase.from('search_requests').select('primary_topic').gte('created_at', since).not('primary_topic', 'is', null);
     const topicCounts: Record<string, number> = {};
-    (topicData || []).forEach((r: { primary_topic: string }) => {
-      topicCounts[r.primary_topic] = (topicCounts[r.primary_topic] || 0) + 1;
-    });
-    const topTopics = Object.entries(topicCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 15)
-      .map(([topic, count]) => ({ topic, count }));
+    (topicData || []).forEach((r: { primary_topic: string }) => { topicCounts[r.primary_topic] = (topicCounts[r.primary_topic] || 0) + 1; });
+    const topTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([topic, count]) => ({ topic, count }));
 
-    // ── Shares by channel ────────────────────────────────
-    const { data: shareChannelData } = await supabase
-      .from('share_events')
-      .select('share_channel')
-      .gte('created_at', since);
+    // Shares by channel
+    const { data: shareChannelData } = await supabase.from('share_events').select('share_channel').gte('created_at', since);
     const sharesByChannel: Record<string, number> = {};
-    (shareChannelData || []).forEach((r: { share_channel: string }) => {
-      sharesByChannel[r.share_channel] = (sharesByChannel[r.share_channel] || 0) + 1;
-    });
+    (shareChannelData || []).forEach((r: { share_channel: string }) => { sharesByChannel[r.share_channel] = (sharesByChannel[r.share_channel] || 0) + 1; });
 
-    // ── Recent questions ─────────────────────────────────
+    // Recent email shares with sender/recipient
+    const { data: recentEmailShares } = await supabase
+      .from('share_events')
+      .select('id, created_at, share_channel, sender_email, recipient_email, query_text')
+      .not('recipient_email', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    // Recent questions
     const { data: recentQuestions } = await supabase
       .from('search_requests')
       .select('id, created_at, query_text, category, primary_topic, life_stage, age_range, status')
       .order('created_at', { ascending: false })
       .limit(50);
 
-    // ── Traffic by path ──────────────────────────────────
-    const { data: pathData } = await supabase
-      .from('page_views')
-      .select('path')
-      .gte('created_at', since);
+    // Traffic by path
+    const { data: pathData } = await supabase.from('page_views').select('path').gte('created_at', since);
     const pathCounts: Record<string, number> = {};
-    (pathData || []).forEach((r: { path: string }) => {
-      pathCounts[r.path] = (pathCounts[r.path] || 0) + 1;
-    });
-    const topPaths = Object.entries(pathCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
-      .map(([path, count]) => ({ path, count }));
+    (pathData || []).forEach((r: { path: string }) => { pathCounts[r.path] = (pathCounts[r.path] || 0) + 1; });
+    const topPaths = Object.entries(pathCounts).sort((a, b) => b[1] - a[1]).slice(0, 20).map(([path, count]) => ({ path, count }));
 
     return NextResponse.json({
       kpis: {
@@ -161,15 +107,11 @@ export async function GET(req: NextRequest) {
         shares:     { total: sharesAll.count || 0, period: sharesRange.count || 0 },
         signups:    { total: signupsAll.count || 0, period: signupsRange.count || 0 },
       },
-      daily: {
-        questions: dailyQuestions,
-        views: dailyViews,
-        shares: dailyShares,
-        signups: dailySignups,
-      },
+      daily: { questions: dailyQuestions, views: dailyViews, shares: dailyShares, signups: dailySignups },
       categoryBreakdown,
       topTopics,
       sharesByChannel,
+      recentEmailShares: recentEmailShares || [],
       recentQuestions: recentQuestions || [],
       topPaths,
       range: days,
