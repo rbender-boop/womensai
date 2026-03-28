@@ -4,7 +4,7 @@ import { SYNTHESIS_PROMPT_TEMPLATE } from '@/lib/ai/prompts';
 import { SYNTHESIS_MAX_TOKENS } from '@/lib/ai/types';
 import type { ProviderResult, CompiledResult } from '@/types/search';
 
-function parseSynthesisOutput(raw: string): Omit<CompiledResult, 'synthesisModel'> {
+export function parseSynthesisOutput(raw: string): Omit<CompiledResult, 'synthesisModel'> {
   const extract = (tag: string): string => {
     const regex = new RegExp(`${tag}:\\s*([\\s\\S]*?)(?=\\n[A-Z_]+:|$)`, 'i');
     const match = raw.match(regex);
@@ -14,7 +14,7 @@ function parseSynthesisOutput(raw: string): Omit<CompiledResult, 'synthesisModel
   const parseBullets = (section: string): string[] => {
     return section
       .split('\n')
-      .map((l) => l.replace(/^[-*•]\s*/, '').trim())
+      .map((l) => l.replace(/^[-*\u2022]\s*/, '').trim())
       .filter(Boolean);
   };
 
@@ -26,20 +26,58 @@ function parseSynthesisOutput(raw: string): Omit<CompiledResult, 'synthesisModel
   };
 }
 
+// Streaming synthesis \u2014 yields text deltas for SSE
+export async function* streamSynthesisText(
+  query: string,
+  providerResults: ProviderResult[]
+): AsyncGenerator<string> {
+  const successful = providerResults.filter((r) => r.status === 'success' && r.text);
+  const responses = successful.map((r) => ({ label: r.label, text: r.text! }));
+  const prompt = SYNTHESIS_PROMPT_TEMPLATE(query, responses);
+  const provider = process.env.SYNTHESIS_PROVIDER || 'anthropic';
+  const model = process.env.SYNTHESIS_MODEL || 'claude-sonnet-4-6';
+
+  if (provider === 'anthropic') {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const stream = await client.messages.create({
+      model,
+      max_tokens: SYNTHESIS_MAX_TOKENS,
+      messages: [{ role: 'user', content: prompt }],
+      stream: true,
+    });
+    for await (const event of stream) {
+      if (
+        event.type === 'content_block_delta' &&
+        event.delta.type === 'text_delta'
+      ) {
+        yield event.delta.text;
+      }
+    }
+  } else {
+    // OpenAI \u2014 no streaming, yield full text at once
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const response = await client.chat.completions.create({
+      model,
+      max_tokens: SYNTHESIS_MAX_TOKENS,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    yield response.choices[0]?.message?.content ?? '';
+  }
+}
+
+// Non-streaming synthesis (backward-compatible, used by non-stream path)
 export async function synthesizeResponses(
   query: string,
   providerResults: ProviderResult[]
 ): Promise<CompiledResult> {
   const successful = providerResults.filter((r) => r.status === 'success' && r.text);
   const responses = successful.map((r) => ({ label: r.label, text: r.text! }));
-
   const prompt = SYNTHESIS_PROMPT_TEMPLATE(query, responses);
   const provider = process.env.SYNTHESIS_PROVIDER || 'anthropic';
   const model = process.env.SYNTHESIS_MODEL || 'claude-sonnet-4-6';
 
   try {
     let raw = '';
-
     if (provider === 'anthropic') {
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
       const response = await client.messages.create({
@@ -58,11 +96,10 @@ export async function synthesizeResponses(
       });
       raw = response.choices[0]?.message?.content ?? '';
     }
-
     return { ...parseSynthesisOutput(raw), synthesisModel: model };
   } catch (err) {
     return {
-      bestAnswer: 'Synthesis unavailable — please review the individual responses below.',
+      bestAnswer: 'Synthesis unavailable \u2014 please review the individual responses below.',
       consensus: [],
       disagreements: [],
       notes: `Synthesis failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
