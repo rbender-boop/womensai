@@ -11,6 +11,28 @@ import type { SearchResponse, ProviderResult } from '@/types/search';
 import { ShareCard } from '@/components/share-card';
 import { AuthGateModal } from '@/components/auth-gate-modal';
 
+// ── Lightweight inline markdown for Best Answer ────────────────────────────────
+function FormattedAnswer({ text }: { text: string }) {
+  const paragraphs = text.split(/\n\n+/).filter(Boolean);
+  return (
+    <div className="space-y-3">
+      {paragraphs.map((p, i) => {
+        // Convert **bold** to <strong>
+        const parts = p.split(/(\*\*[^*]+\*\*)/);
+        return (
+          <p key={i} className="text-sm text-warm-gray leading-relaxed">
+            {parts.map((part, j) =>
+              part.startsWith('**') && part.endsWith('**')
+                ? <strong key={j} className="font-semibold text-warm-black">{part.slice(2, -2)}</strong>
+                : part
+            )}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Style maps ─────────────────────────────────────────────────────────────────
 const PROVIDER_STYLES: Record<string, { bg: string; border: string; text: string; dot: string }> = {
   chatgpt: { bg: '#EFF6EF', border: '#C2D9C0', text: '#2F6B2B', dot: '#4A9645' },
@@ -418,7 +440,7 @@ export default function ResultsPage() {
                   <h2 className="font-semibold text-warm-black">Best Answer</h2>
                   <span className="text-xs text-warm-muted ml-auto">Synthesized from all responses</span>
                 </div>
-                <p className="text-sm text-warm-gray leading-relaxed whitespace-pre-wrap">{compiled.bestAnswer}</p>
+                <FormattedAnswer text={compiled.bestAnswer} />
               </div>
               <ShareCard
                 onShareSocial={handleSocialShare}

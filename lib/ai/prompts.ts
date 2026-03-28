@@ -40,7 +40,13 @@ ${responseBlocks}
 Return output in EXACTLY these labeled sections with no extra text before or after:
 
 BEST_ANSWER:
-A concise, practical synthesis. Lead with the most actionable answer. Include key context, what's well-supported, and any important caveats. Always mention when professional medical consultation is appropriate.
+Write a scannable, well-formatted answer using this exact structure:
+
+1. Start with a single bold sentence that directly answers the question — the bottom line. Wrap it in **double asterisks**.
+2. Then write 2-3 short paragraphs (3-4 sentences each) covering key details, evidence, and caveats. Use **bold** to highlight key product names, terms, or takeaways within each paragraph so a reader can scan quickly.
+3. Separate each paragraph with a blank line.
+4. End with a brief line about when to consult a doctor, if relevant.
+5. Keep the total answer under 150 words. Be concise — every sentence must earn its place.
 
 CONSENSUS:
 3-6 bullet points (starting with -) where the responses broadly agree.
