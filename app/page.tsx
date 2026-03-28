@@ -274,18 +274,18 @@ export default function HomePage() {
 
       <main className="flex-1 flex flex-col items-center">
 
-        {/* HERO */}
-        <section className="w-full max-w-3xl mx-auto px-6 pt-24 pb-16 text-center">
+        {/* HERO — compact on desktop, natural on mobile */}
+        <section className="w-full max-w-3xl mx-auto px-6 pt-10 sm:pt-12 pb-8 sm:pb-10 text-center">
 
-          <div className="hero-1 inline-flex items-center gap-2 text-xs font-medium px-5 py-2 rounded-full mb-10"
+          <div className="hero-1 inline-flex items-center gap-2 text-xs font-medium px-5 py-2 rounded-full mb-4 sm:mb-5"
             style={{ background: 'rgba(155,65,99,0.07)', border: '1px solid rgba(155,65,99,0.18)', color: '#8B3058', letterSpacing: '0.3px' }}>
             <Sparkles size={11} />
             ChatGPT · Gemini · Claude · Grok — one compiled answer
           </div>
 
-          <h1 className="hero-2 mb-6" style={{
+          <h1 className="hero-2 mb-3 sm:mb-4" style={{
             fontFamily: 'var(--font-playfair)',
-            fontSize: 'clamp(40px, 7vw, 74px)',
+            fontSize: 'clamp(36px, 6vw, 58px)',
             fontWeight: 700,
             lineHeight: 1.08,
             letterSpacing: '-0.5px',
@@ -298,17 +298,14 @@ export default function HomePage() {
             One answer.
           </h1>
 
-          <p className="hero-3 mx-auto mb-3" style={{ fontSize: '17px', color: '#6B6560', maxWidth: '440px', lineHeight: 1.8, textAlign: 'center' }}>
-            Health. Fitness. Wellness. Beauty. Ask once and get the combined perspective of ChatGPT, Gemini, Claude, and Grok — compiled into one clear, compiled answer.
+          <p className="hero-3 mx-auto mb-4 sm:mb-5" style={{ fontSize: '15px', color: '#6B6560', maxWidth: '440px', lineHeight: 1.7, textAlign: 'center' }}>
+            Health. Fitness. Wellness. Beauty. Get the combined perspective of ChatGPT, Gemini, Claude, and Grok — compiled into one clear answer.
           </p>
 
-          <p className="hero-3 mx-auto mb-8" style={{ fontSize: '15px', color: '#7A6E67', maxWidth: '380px', lineHeight: 1.75, textAlign: 'center' }}>
-            See how the AIs agree — or if they disagree on certain key points — in 60 seconds or less.
-          </p>
-
-          <p className="hero-3 mb-11" style={{
+          {/* Breathing tagline — mobile only */}
+          <p className="hero-3 mb-6 sm:hidden" style={{
             fontFamily: 'var(--font-playfair)',
-            fontSize: '17px',
+            fontSize: '16px',
             color: '#9B4163',
             fontStyle: 'italic',
             animation: 'breathe 3.5s ease-in-out infinite',
