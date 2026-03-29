@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 export function PageViewTracker() {
   const pathname = usePathname();
+  const lastTracked = useRef('');
 
   useEffect(() => {
-    // Only track once per browser session (tab open to tab close)
-    const key = 'wai_pv_tracked';
     if (typeof window === 'undefined') return;
-    if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, '1');
+    // Skip admin pages
+    if (pathname.startsWith('/admin')) return;
+    // Avoid double-fire on same path (React strict mode)
+    if (lastTracked.current === pathname) return;
+    lastTracked.current = pathname;
 
     const sessionId = document.cookie
       .split('; ')
