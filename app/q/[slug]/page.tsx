@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Metadata } from 'next';
 import QuestionPageClient from './client';
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.askwomensai.com';
+
 interface CuratedQuestion {
   id: string;
   slug: string;
@@ -78,7 +80,7 @@ async function getFullContent(searchRequestId: string): Promise<FullContent | nu
   return { teaser, bestAnswer: rawAnswer, consensus, disagreements };
 }
 
-// ── Static params for build-time pre-rendering ────────────────────────────
+// ── Static params for build-time pre-rendering ────────────────────────────────────────
 export async function generateStaticParams() {
   const supabase = getSupabase();
   const { data } = await supabase
@@ -88,7 +90,7 @@ export async function generateStaticParams() {
   return (data ?? []).map((q) => ({ slug: q.slug }));
 }
 
-// ── Metadata ──────────────────────────────────────────────────────────────
+// ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -99,7 +101,7 @@ export async function generateMetadata(
   const title = q.meta_title ?? `${q.question} | AskWomensAI`;
   const description = q.meta_description ??
     `We asked ChatGPT, Gemini, Claude, and Grok: ${q.question}`;
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/q/${slug}`;
+  const url = `${SITE_URL}/q/${slug}`;
 
   return {
     title,
@@ -119,7 +121,7 @@ export async function generateMetadata(
   };
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default async function QuestionPage(
   { params }: { params: Promise<{ slug: string }> }
 ) {
