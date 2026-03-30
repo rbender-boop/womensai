@@ -2,15 +2,25 @@ import { createClient } from '@supabase/supabase-js';
 import type { Metadata } from 'next';
 import WeirdClient from './client';
 
+const SITE_URL = 'https://www.askwomensai.com';
+
 export const metadata: Metadata = {
-  title: "Weird Women's Health Questions — What Do the AIs Say? | AskWomensAI",
+  title: "Weird Women's Health Questions \u2014 What Do the AIs Say? | AskWomensAI",
   description:
     "The weird, the wild, and the genuinely curious. Browse 50+ strange women's health questions and see how ChatGPT, Gemini, Claude, and Grok respond.",
-  alternates: { canonical: `${process.env.NEXT_PUBLIC_APP_URL}/weird` },
+  alternates: { canonical: `${SITE_URL}/weird` },
   openGraph: {
     title: "Weird Women's Health Questions | AskWomensAI",
-    description: "The weird, the wild, and the genuinely curious — answered by 4 AIs.",
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/weird`,
+    description: "The weird, the wild, and the genuinely curious \u2014 answered by 4 AIs.",
+    url: `${SITE_URL}/weird`,
+    siteName: 'AskWomensAI',
+    images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: 'AskWomensAI Weird Questions' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Weird Women's Health Questions | AskWomensAI",
+    description: "The weird, the wild, and the genuinely curious \u2014 answered by 4 AIs.",
+    images: [`${SITE_URL}/opengraph-image`],
   },
 };
 

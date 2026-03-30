@@ -2,15 +2,25 @@ import { createClient } from '@supabase/supabase-js';
 import type { Metadata } from 'next';
 import QuestionsClient from './client';
 
+const SITE_URL = 'https://www.askwomensai.com';
+
 export const metadata: Metadata = {
-  title: "Women's Health Questions — Answered by ChatGPT, Gemini, Claude & Grok | AskWomensAI",
+  title: "Women's Health Questions \u2014 Answered by ChatGPT, Gemini, Claude & Grok | AskWomensAI",
   description:
-    "Browse 500+ women's health, fitness, wellness, and beauty questions answered by four major AIs. See where ChatGPT, Gemini, Claude, and Grok agree — and where they differ.",
-  alternates: { canonical: `${process.env.NEXT_PUBLIC_APP_URL}/questions` },
+    "Browse 500+ women's health, fitness, wellness, and beauty questions answered by four major AIs. See where ChatGPT, Gemini, Claude, and Grok agree \u2014 and where they differ.",
+  alternates: { canonical: `${SITE_URL}/questions` },
   openGraph: {
     title: "Women's Health Questions | AskWomensAI",
     description: "Browse 500+ questions answered by ChatGPT, Gemini, Claude, and Grok.",
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/questions`,
+    url: `${SITE_URL}/questions`,
+    siteName: 'AskWomensAI',
+    images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: 'AskWomensAI Questions' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Women's Health Questions | AskWomensAI",
+    description: "Browse 500+ questions answered by ChatGPT, Gemini, Claude, and Grok.",
+    images: [`${SITE_URL}/opengraph-image`],
   },
 };
 

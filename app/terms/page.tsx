@@ -1,4 +1,17 @@
+import type { Metadata } from 'next';
 import { InteriorHeader } from '@/components/interior-header';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service | AskWomensAI',
+  description:
+    'AskWomensAI terms of service. AI-generated responses are for informational purposes only and do not constitute medical advice. Always consult a qualified healthcare provider.',
+  alternates: { canonical: 'https://www.askwomensai.com/terms' },
+  openGraph: {
+    title: 'Terms of Service | AskWomensAI',
+    description: 'Terms of service for AskWomensAI. Not medical advice.',
+    url: 'https://www.askwomensai.com/terms',
+  },
+};
 
 export default function TermsPage() {
   return (

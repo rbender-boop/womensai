@@ -1,4 +1,17 @@
+import type { Metadata } from 'next';
 import { InteriorHeader } from '@/components/interior-header';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | AskWomensAI',
+  description:
+    'AskWomensAI privacy policy. We do not sell or share your personal information. Your questions are private and never disclosed to third parties.',
+  alternates: { canonical: 'https://www.askwomensai.com/privacy' },
+  openGraph: {
+    title: 'Privacy Policy | AskWomensAI',
+    description: 'AskWomensAI does not sell or share your personal information.',
+    url: 'https://www.askwomensai.com/privacy',
+  },
+};
 
 export default function PrivacyPage() {
   return (
