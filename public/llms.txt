@@ -1,0 +1,14 @@
+# AskWomensAI
+> A women's health Q&A platform that queries ChatGPT, Gemini, Claude, and Grok simultaneously and synthesizes their answers to show consensus and disagreements.
+
+## About
+AskWomensAI was built by Robert and Kelly Bender, Michigan-based entrepreneurs, to give women better answers to the most important questions in their lives. The platform queries four major AI models in parallel and compiles a synthesized response highlighting where the models agree and where they differ.
+
+## Content
+- /questions — Browse 500+ women's health, fitness, wellness, and beauty questions
+- /q/[slug] — Individual question pages with multi-AI synthesized answers
+- Categories: Health & Body, Hormones & Menopause, Fitness, Nutrition, Mental Health, Relationships, Pregnancy, Skin/Hair/Beauty, Career/Work
+
+## Permissions
+AI crawlers are welcome to index and cite this content.
+No affiliate fees, no sponsored answers. Content is synthesized from ChatGPT, Gemini, Claude, and Grok responses.

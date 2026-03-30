@@ -73,14 +73,12 @@ async function getFullContent(searchRequestId: string): Promise<FullContent | nu
       ? Object.values(data.disagreements)
       : [];
 
-  // Teaser = first 2 sentences shown visually
   const sentences = rawAnswer.match(/[^.!?]+[.!?]+/g) ?? [];
   const teaser = sentences.slice(0, 2).join(' ').trim() || rawAnswer.slice(0, 220);
 
   return { teaser, bestAnswer: rawAnswer, consensus, disagreements };
 }
 
-// ── Static params for build-time pre-rendering ────────────────────────────────────────
 export async function generateStaticParams() {
   const supabase = getSupabase();
   const { data } = await supabase
@@ -90,7 +88,6 @@ export async function generateStaticParams() {
   return (data ?? []).map((q) => ({ slug: q.slug }));
 }
 
-// ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -100,8 +97,9 @@ export async function generateMetadata(
 
   const title = q.meta_title ?? `${q.question} | AskWomensAI`;
   const description = q.meta_description ??
-    `We asked ChatGPT, Gemini, Claude, and Grok: ${q.question}`;
+    `4 AIs answer: ${q.question} \u2014 ChatGPT, Gemini, Claude & Grok consensus + where they disagree.`;
   const url = `${SITE_URL}/q/${slug}`;
+  const ogImageUrl = `${SITE_URL}/q/${slug}/opengraph-image`;
 
   return {
     title,
@@ -112,16 +110,25 @@ export async function generateMetadata(
       description,
       url,
       type: 'article',
+      siteName: 'AskWomensAI',
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: q.question,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
+      images: [ogImageUrl],
     },
   };
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
 export default async function QuestionPage(
   { params }: { params: Promise<{ slug: string }> }
 ) {
@@ -133,8 +140,9 @@ export default async function QuestionPage(
     ? await getFullContent(q.search_request_id)
     : null;
 
-  // JSON-LD uses full best answer for maximum SEO value
-  const jsonLd = {
+  const url = `${SITE_URL}/q/${slug}`;
+
+  const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: [{
@@ -147,11 +155,25 @@ export default async function QuestionPage(
     }],
   };
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Questions', item: `${SITE_URL}/questions` },
+      { '@type': 'ListItem', position: 3, name: q.question, item: url },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <QuestionPageClient
         question={q}

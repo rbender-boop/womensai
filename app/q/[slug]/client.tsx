@@ -80,12 +80,12 @@ export default function QuestionPageClient({ question, teaser, bestAnswer, conse
                 color: '#8B3058',
               }}
             >
-              {isWeird ? '🤔 Weird Questions' : question.category}
+              {isWeird ? '\uD83E\uDD14 Weird Questions' : question.category}
             </a>
-            <span style={{ color: '#AFA8A2', fontSize: '12px' }}>·</span>
+            <span style={{ color: '#AFA8A2', fontSize: '12px' }}>&#183;</span>
             <span className="flex items-center gap-1 text-xs" style={{ color: '#AFA8A2' }}>
               <Sparkles size={10} />
-              ChatGPT · Gemini · Claude · Grok
+              ChatGPT &#183; Gemini &#183; Claude &#183; Grok
             </span>
           </div>
 
@@ -140,13 +140,13 @@ export default function QuestionPageClient({ question, teaser, bestAnswer, conse
                   }} />
                   <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2">
                     <Lock size={12} style={{ color: '#AFA8A2' }} />
-                    <span className="text-xs" style={{ color: '#AFA8A2' }}>Full answer · Consensus · Disagreements below</span>
+                    <span className="text-xs" style={{ color: '#AFA8A2' }}>Full answer &#183; Consensus &#183; Disagreements below</span>
                   </div>
                 </div>
               </>
             ) : (
               <p className="text-base leading-relaxed mb-6" style={{ color: '#7A6E67' }}>
-                We&apos;ve asked ChatGPT, Gemini, Claude, and Grok this question. See where they agree — and where they differ.
+                We&apos;ve asked ChatGPT, Gemini, Claude, and Grok this question. See where they agree \u2014 and where they differ.
               </p>
             )}
 
@@ -168,7 +168,7 @@ export default function QuestionPageClient({ question, teaser, bestAnswer, conse
             </button>
 
             <p className="mt-4 text-center text-xs" style={{ color: '#AFA8A2' }}>
-              Free · No account required · Best Answer + Consensus + Disagreements
+              Free &#183; No account required &#183; Best Answer + Consensus + Disagreements
             </p>
           </div>
 
@@ -190,14 +190,18 @@ export default function QuestionPageClient({ question, teaser, bestAnswer, conse
             </a>
           </div>
 
-          {/* Visually hidden full answer — visible to Google, invisible to users */}
+          {/* Full answer content — server-rendered for SEO crawlers */}
           {bestAnswer && (
-            <div aria-hidden="true" style={{
+            <div style={{
               position: 'absolute',
-              left: '-9999px',
               width: '1px',
               height: '1px',
+              padding: 0,
+              margin: '-1px',
               overflow: 'hidden',
+              clip: 'rect(0,0,0,0)',
+              whiteSpace: 'nowrap',
+              borderWidth: 0,
             }}>
               <h2>Best Answer</h2>
               <p>{bestAnswer}</p>
@@ -224,7 +228,7 @@ export default function QuestionPageClient({ question, teaser, bestAnswer, conse
           <div className="flex items-center">
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#1C1714' }}>AskWomens</span>
             <span style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, color: '#8B3058', fontStyle: 'italic' }}>AI</span>
-            <span className="ml-2 text-xs" style={{ color: '#AFA8A2' }}>© 2025</span>
+            <span className="ml-2 text-xs" style={{ color: '#AFA8A2' }}>&#169; 2025</span>
           </div>
           <div className="flex items-center gap-5">
             <a href="/questions" style={{ fontSize: '12px', color: '#7A6E67' }}>Questions</a>
